@@ -523,6 +523,8 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
 // ════════════════════════════════════════════════
 //  STATE
@@ -534,12 +536,29 @@ let currentLat = null, currentLng = null;
 let pendingPhotos = [];
 let isReadOnly = false;
 let lbPhotos = [], lbIdx = 0;
+let db = null;
+
+// ════════════════════════════════════════════════
+//  FIREBASE INIT
+// ════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyAq35wd22lptzq_n6FFJCAe5QOaeJbB9CU",
+  authDomain: "nos-tables.firebaseapp.com",
+  databaseURL: "https://nos-tables-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "nos-tables",
+  storageBucket: "nos-tables.firebasestorage.app",
+  messagingSenderId: "928742014600",
+  appId: "1:928742014600:web:95758d746b3601392d693d"
+};
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+} catch(e) { console.error('Firebase init:', e); }
 
 // ════════════════════════════════════════════════
 //  LOAD / SAVE
 // ════════════════════════════════════════════════
 function load() {
-  // 1. Vérifier si on a des données dans l'URL (mode partagé)
   const hash = location.hash;
   if (hash.startsWith('#share=') || hash.startsWith('#import=')) {
     const mode = hash.startsWith('#share=') ? 'readonly' : 'import';
@@ -552,34 +571,71 @@ function load() {
         document.getElementById('name1').value = data.names[0]||'';
         document.getElementById('name2').value = data.names[1]||'';
       }
-      if (mode === 'readonly') {
-        isReadOnly = true;
-        setReadOnlyUI();
-      } else {
-        // Mode import : on charge et on propose d'enregistrer
-        promptImport(data);
-        return;
-      }
+      if (mode === 'readonly') { isReadOnly = true; setReadOnlyUI(); renderStats(); renderList(); }
+      else { promptImport(data); }
     } catch(e) {
-      showToast('❌ Lien invalide ou corrompu');
-      loadFromStorage();
+      showToast('❌ Lien invalide');
+      loadFromFirebase();
     }
   } else {
-    loadFromStorage();
+    loadFromFirebase();
   }
 }
 
-function loadFromStorage() {
-  try { restaurants = JSON.parse(localStorage.getItem('nos-tables-v3')||'[]'); } catch(e) { restaurants=[]; }
-  const n1=localStorage.getItem('cn1'), n2=localStorage.getItem('cn2');
-  if(n1) document.getElementById('name1').value=n1;
-  if(n2) document.getElementById('name2').value=n2;
+function loadFromFirebase() {
+  if (!db) { showToast('⚠️ Firebase indisponible'); return; }
+  showSyncIndicator('⏳ Chargement...');
+  // Charger les prénoms
+  db.ref('names').once('value').then(snap => {
+    const names = snap.val();
+    if (names) {
+      if (names.n1) document.getElementById('name1').value = names.n1;
+      if (names.n2) document.getElementById('name2').value = names.n2;
+    }
+  });
+  // Écoute temps réel des restaurants
+  db.ref('restaurants').on('value', snap => {
+    const data = snap.val();
+    restaurants = data ? Object.values(data) : [];
+    restaurants.sort((a,b) => (b.id||0)-(a.id||0));
+    renderStats(); renderList();
+    hideSyncIndicator();
+  }, err => {
+    showToast('⚠️ Erreur Firebase: ' + err.message);
+    hideSyncIndicator();
+  });
 }
 
 function saveData() {
-  if(isReadOnly) return;
-  try { localStorage.setItem('nos-tables-v3', JSON.stringify(restaurants)); }
-  catch(e) { showToast('⚠️ Stockage plein — réduisez les photos'); }
+  if (isReadOnly || !db) return;
+  const obj = {};
+  restaurants.forEach(r => { obj[r.id] = r; });
+  showSyncIndicator('💾 Sauvegarde...');
+  db.ref('restaurants').set(obj)
+    .then(() => hideSyncIndicator())
+    .catch(e => showToast('⚠️ Erreur sauvegarde: ' + e.message));
+}
+
+function saveNames() {
+  if (isReadOnly || !db) return;
+  const n1 = document.getElementById('name1').value;
+  const n2 = document.getElementById('name2').value;
+  db.ref('names').set({n1, n2}).catch(()=>{});
+}
+
+function showSyncIndicator(msg) {
+  let ind = document.getElementById('syncIndicator');
+  if (!ind) {
+    ind = document.createElement('div');
+    ind.id = 'syncIndicator';
+    ind.style.cssText = 'position:fixed;top:12px;right:12px;background:var(--forest);color:white;border-radius:50px;padding:6px 14px;font-size:.78rem;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.2);transition:opacity .5s;font-family:DM Sans,sans-serif;';
+    document.body.appendChild(ind);
+  }
+  ind.textContent = msg; ind.style.opacity = '1';
+}
+function hideSyncIndicator() {
+  const ind = document.getElementById('syncIndicator');
+  if (ind) { ind.textContent = '✅ Synchronisé'; setTimeout(() => { ind.style.opacity = '0'; }, 2000); }
 }
 
 // ════════════════════════════════════════════════
@@ -590,17 +646,12 @@ function setReadOnlyUI() {
   document.getElementById('actionBar').style.display = 'none';
   document.getElementById('name1').disabled = true;
   document.getElementById('name2').disabled = true;
-  // Hide edit/delete buttons on cards (done in renderList)
 }
 
 function importSharedData() {
-  if(!confirm('Voulez-vous importer ces restaurants dans votre carnet sur cet appareil ?\n\nAttention : cela remplacera vos données existantes.')) return;
+  if(!confirm('Importer ces restaurants dans le carnet partagé ?\nCela remplacera les données existantes.')) return;
   isReadOnly = false;
-  localStorage.setItem('nos-tables-v3', JSON.stringify(restaurants));
-  const n1 = document.getElementById('name1').value;
-  const n2 = document.getElementById('name2').value;
-  if(n1) localStorage.setItem('cn1',n1);
-  if(n2) localStorage.setItem('cn2',n2);
+  saveData();
   location.hash = '';
   location.reload();
 }
@@ -611,19 +662,15 @@ function promptImport(data) {
     document.getElementById('name1').value = data.names[0]||'';
     document.getElementById('name2').value = data.names[1]||'';
   }
-  // Mode import direct : on propose d'enregistrer
   document.getElementById('readonlyBanner').innerHTML =
-    `📥 Données reçues (${restaurants.length} restaurant${restaurants.length>1?'s':''}) — <button class="btn-import-banner" onclick="confirmImport()">✅ Enregistrer sur cet appareil</button> <button class="btn-import-banner" style="background:#888" onclick="location.hash=''">✕ Annuler</button>`;
+    `📥 Données reçues (${restaurants.length} restaurant${restaurants.length>1?'s':''}) — <button class="btn-import-banner" onclick="confirmImport()">✅ Enregistrer</button> <button class="btn-import-banner" style="background:#888" onclick="location.hash=''">✕ Annuler</button>`;
   document.getElementById('readonlyBanner').classList.add('active');
   renderStats(); renderList();
 }
 
 function confirmImport() {
-  localStorage.setItem('nos-tables-v3', JSON.stringify(restaurants));
-  const n1=document.getElementById('name1').value, n2=document.getElementById('name2').value;
-  if(n1) localStorage.setItem('cn1',n1);
-  if(n2) localStorage.setItem('cn2',n2);
-  location.hash='';
+  saveData();
+  location.hash = '';
   location.reload();
 }
 
@@ -1022,8 +1069,8 @@ function showToast(msg){
 }
 document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
 document.getElementById('shareOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeShareModal();});
-document.getElementById('name1').addEventListener('input',e=>{if(!isReadOnly)localStorage.setItem('cn1',e.target.value);});
-document.getElementById('name2').addEventListener('input',e=>{if(!isReadOnly)localStorage.setItem('cn2',e.target.value);});
+document.getElementById('name1').addEventListener('input', saveNames);
+document.getElementById('name2').addEventListener('input', saveNames);
 
 // Drag & Drop
 const da=document.getElementById('dropArea');
