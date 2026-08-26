@@ -595,17 +595,33 @@ function load(){
 }
 
 function saveMonths(){
-  if(!isAdmin||!db) return;
-  const obj={}; months.forEach(m=>obj[m.id]=m);
+  if(isReadOnly) return;
+  if(!db){ toast('⚠️ Pas de connexion à la base (hors-ligne)'); return; }
+  if(!isAdmin) return;
+  const obj={}; months.forEach(m=>obj[m.id]=sanitize(m));
   config.updated = Date.now();
   sync('💾 Sauvegarde...');
   Promise.all([ db.ref(ROOT+'/months').set(obj), db.ref(ROOT+'/config/updated').set(config.updated) ])
-    .then(syncDone).catch(e=>toast('⚠️ '+e.message));
+    .then(syncDone).catch(saveErr);
 }
 function saveConfig(){
   if(!isAdmin||!db) return;
   sync('💾 Sauvegarde...');
-  db.ref(ROOT+'/config').set(config).then(syncDone).catch(e=>toast('⚠️ '+e.message));
+  db.ref(ROOT+'/config').set(sanitize(config)).then(syncDone).catch(saveErr);
+}
+// Firebase refuse les valeurs undefined → on nettoie l'objet avant écriture
+function sanitize(o){ return JSON.parse(JSON.stringify(o, (k,v)=> v===undefined ? null : v)); }
+function saveErr(e){
+  const msg=(e&&e.message)||String(e);
+  console.error('Firebase save error:', e);
+  if(/permission|denied/i.test(msg)){
+    toast('⛔ Écriture refusée : ouvre les règles Firebase (voir instructions)');
+    let w=document.getElementById('permWarn');
+    if(!w){ w=document.createElement('div'); w.id='permWarn'; w.className='sync-ind'; w.style.cssText='position:fixed;top:110px;right:14px;left:14px;max-width:520px;margin:0 auto;background:#3a1620;border:1px solid var(--red);color:#ffd7db;border-radius:12px;padding:12px 14px;font-size:.82rem;line-height:1.5;z-index:300;'; document.body.appendChild(w); }
+    w.innerHTML='⛔ <b>Sauvegarde bloquée par Firebase.</b> Va dans Firebase → Realtime Database → Règles, autorise la lecture/écriture, puis Publier. <button onclick="this.parentNode.remove()" style="margin-left:6px;background:none;border:1px solid var(--red);color:#ffd7db;border-radius:6px;padding:2px 8px;cursor:pointer">OK</button>';
+  } else {
+    toast('⚠️ Sauvegarde : '+msg);
+  }
 }
 
 // ── CONFIG UI ──
