@@ -441,24 +441,36 @@
   <div class="modal" style="max-width:600px">
     <div class="modal-head"><h2>📥 Importer mes trades</h2><button class="modal-x" onclick="closeImport()">✕</button></div>
     <div class="modal-body">
-      <p class="imp-note">Exporte l'historique de tes trades depuis ta plateforme (Tradovate, NinjaTrader, TradingView, MT4/5, prop firm…) en <b>CSV</b>, puis dépose le fichier ici — ou colle directement les lignes. Le site regroupe tout <b>par mois</b> automatiquement.</p>
+      <p class="imp-note">Colle ton <b>JSON de trades</b> (format NinjaTrader) ou dépose un <b>CSV</b> de ta plateforme. Le site calcule le P&L, puis regroupe tout <b>par mois</b> automatiquement.</p>
 
       <div class="imp-drop" style="margin-top:12px">
-        <input type="file" id="imp-file" accept=".csv,.tsv,.txt" onchange="impFile(event)">
+        <input type="file" id="imp-file" accept=".json,.csv,.tsv,.txt" onchange="impFile(event)">
         <div class="ic">📄</div>
-        <p><strong>Choisir un fichier CSV</strong> ou glisser-déposer</p>
+        <p><strong>Choisir un fichier</strong> (JSON ou CSV) ou glisser-déposer</p>
       </div>
       <div class="form-divider" style="display:flex;align-items:center;gap:12px;margin:14px 0;color:var(--muted2)">
         <span style="flex:1;height:1px;background:var(--border)"></span><span style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em">ou coller</span><span style="flex:1;height:1px;background:var(--border)"></span>
       </div>
       <div class="fg" style="margin:0">
-        <textarea id="imp-paste" placeholder="Colle ici les lignes de ton export (avec la ligne d'en-tête)…" style="min-height:90px;font-family:'JetBrains Mono',monospace;font-size:.78rem"></textarea>
+        <textarea id="imp-paste" placeholder='Colle ton JSON de trades ([ { "symbol":"NQ", "direction":"short", "entry":..., "exit":... }, ... ]) ou un CSV avec sa ligne d’en-tête…' style="min-height:90px;font-family:'JetBrains Mono',monospace;font-size:.78rem"></textarea>
       </div>
       <button class="btn btn-accent" onclick="impAnalyze()" style="width:100%;justify-content:center;margin-top:10px;padding:12px">🔎 Analyser</button>
 
       <!-- MAPPING + PREVIEW -->
       <div id="imp-config" style="display:none">
-        <div class="imp-step">
+        <div class="imp-step" id="imp-jsonmap" style="display:none">
+          <h4 id="imp-jsonhead">1 · Trades détectés</h4>
+          <div class="imp-map-row">
+            <div class="fg" style="margin:0"><label>Valeur du point ($ / point / contrat)</label>
+              <input type="number" inputmode="decimal" id="imp-pv" placeholder="NQ = 20">
+            </div>
+            <div class="fg" style="margin:0"><label>Date de référence</label>
+              <select id="imp-datesrc"><option value="exitTime">Sortie (exitTime)</option><option value="entryTime">Entrée (entryTime)</option></select>
+            </div>
+          </div>
+          <div class="imp-note" id="imp-pvnote"></div>
+        </div>
+        <div class="imp-step" id="imp-csvmap">
           <h4>1 · Colonnes détectées</h4>
           <div class="imp-map-row">
             <div class="fg" style="margin:0"><label>Date du trade</label><select id="imp-date"></select></div>
@@ -989,15 +1001,19 @@ function syncDone(){ const i=document.getElementById('syncInd'); if(i){ i.textCo
 [...document.querySelectorAll('.overlay')].forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('active'); }));
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ [...document.querySelectorAll('.overlay.active')].forEach(o=>o.classList.remove('active')); closeLb(); } });
 
-// ── CSV IMPORT ──
-let impParsed=null, impAgg=null;
+// ── CSV / JSON IMPORT ──
+let impParsed=null, impAgg=null, impMode='csv', impTrades=[];
+// Valeur du point ($ par point, par contrat) pour les futures courants
+const POINT_VALUES={NQ:20,MNQ:2,ES:50,MES:5,YM:5,MYM:0.5,RTY:50,M2K:5,RTM:5,CL:1000,MCL:100,GC:100,MGC:10,SI:5000,NG:10000,ZB:1000,ZN:1000,ZF:1000,'6E':125000,'6B':62500,'6J':12500000,'6A':100000};
+function pvFor(sym){ const s=String(sym||'').toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/\d{2,}$/,''); for(const k in POINT_VALUES){ if(s.startsWith(k)) return POINT_VALUES[k]; } return null; }
 function openImport(){
   if(!isAdmin) return;
   document.getElementById('imp-file').value='';
   document.getElementById('imp-paste').value='';
   document.getElementById('imp-config').style.display='none';
   document.getElementById('imp-capital').value='';
-  impParsed=null; impAgg=null; disableApply();
+  document.getElementById('imp-pv').value='';
+  impParsed=null; impAgg=null; impTrades=[]; impMode='csv'; disableApply();
   document.getElementById('importOverlay').classList.add('active');
   document.querySelector('#importOverlay .modal-body').scrollTop=0;
 }
@@ -1021,7 +1037,15 @@ function splitLine(line,d){
 }
 function impAnalyze(){
   const text=document.getElementById('imp-paste').value.replace(/\r/g,'').trim();
-  if(!text){ toast('Colle un CSV ou choisis un fichier'); return; }
+  if(!text){ toast('Colle un JSON/CSV ou choisis un fichier'); return; }
+  // ── détection JSON (format NinjaTrader / liste de trades) ──
+  if(text[0]==='['||text[0]==='{'){
+    let data=null; try{ data=JSON.parse(text); }catch(e){ data=null; }
+    if(data){
+      const arr=Array.isArray(data)?data:(Array.isArray(data.trades)?data.trades:(Array.isArray(data.data)?data.data:null));
+      if(arr&&arr.length&&typeof arr[0]==='object'){ return impAnalyzeJson(arr); }
+    }
+  }
   const lines=text.split('\n').filter(l=>l.trim());
   if(lines.length<2){ toast('Pas assez de lignes'); return; }
   // détecter le séparateur
@@ -1042,9 +1066,44 @@ function impAnalyze(){
   if(di<0) di=guessDateCol(rows); if(di<0) di=0;
   if(pi<0) pi=guessNumCol(rows,di); if(pi<0) pi=Math.min(1,headers.length-1);
   dSel.value=di; pSel.value=pi; sSel.value=si;
+  impMode='csv';
+  document.getElementById('imp-csvmap').style.display='block';
+  document.getElementById('imp-jsonmap').style.display='none';
   document.getElementById('imp-config').style.display='block';
   [dSel,pSel,sSel,document.getElementById('imp-dateorder'),document.getElementById('imp-capital')].forEach(el=>{ el.oninput=impRefresh; el.onchange=impRefresh; });
   impRefresh();
+}
+
+// ── JSON (liste de trades type NinjaTrader) ──
+function impAnalyzeJson(arr){
+  impMode='json';
+  impTrades = arr.map(t=>{
+    const dir = /short|sell|vente/i.test(String(t.direction||t.side||t.dir||'')) ? 'short' : 'long';
+    const contracts = +(t.contracts||t.qty||t.quantity||t.size||1) || 1;
+    const entry = parseNum(t.entry!=null?t.entry:t.entryPrice), exit = parseNum(t.exit!=null?t.exit:t.exitPrice);
+    const fees = parseNum(t.fees!=null?t.fees:(t.commission!=null?t.commission:0)) || 0;
+    const entryISO = t.entryTime||t.entry_time||t.openTime||t.time||t.date||null;
+    const exitISO = t.exitTime||t.exit_time||t.closeTime||t.time||t.date||null;
+    const explicitPnl = (t.pnl!=null?parseNum(t.pnl):(t.profit!=null?parseNum(t.profit):(t.realized!=null?parseNum(t.realized):NaN)));
+    return { symbol:(t.symbol||t.instrument||t.ticker||'').toString(), dir, contracts, entry, exit, fees, entryISO, exitISO, explicitPnl };
+  });
+  // valeur du point auto (d'après le 1er symbole reconnu)
+  let autoPv=null; for(const t of impTrades){ const p=pvFor(t.symbol); if(p){ autoPv=p; break; } }
+  document.getElementById('imp-pv').value = autoPv!=null?autoPv:20;
+  const syms=[...new Set(impTrades.map(t=>t.symbol).filter(Boolean))];
+  document.getElementById('imp-jsonhead').textContent = `1 · ${impTrades.length} trades détectés`;
+  document.getElementById('imp-pvnote').innerHTML = `Symbole(s) : <b>${syms.join(', ')||'?'}</b>. Le P&L est calculé : (sortie − entrée) × sens × contrats × valeur du point − frais. NQ = 20 $/pt, MNQ = 2 $/pt, ES = 50 $/pt…`;
+  document.getElementById('imp-csvmap').style.display='none';
+  document.getElementById('imp-jsonmap').style.display='block';
+  document.getElementById('imp-config').style.display='block';
+  [document.getElementById('imp-pv'),document.getElementById('imp-datesrc'),document.getElementById('imp-capital')].forEach(el=>{ el.oninput=impRefresh; el.onchange=impRefresh; });
+  impRefresh();
+}
+function tradePnl(t,pv){
+  if(!isNaN(t.explicitPnl)) return t.explicitPnl;
+  if(isNaN(t.entry)||isNaN(t.exit)) return NaN;
+  const pts=(t.dir==='long'? t.exit-t.entry : t.entry-t.exit)*t.contracts;
+  return pts*pv - (t.fees||0);
 }
 function guessDateCol(rows){ const n=Math.min(rows.length,8); for(let c=0;c<(rows[0]||[]).length;c++){ let ok=0; for(let r=0;r<n;r++){ if(parseDate((rows[r]||[])[c],'auto')) ok++; } if(ok>=Math.ceil(n*0.6)) return c; } return -1; }
 function guessNumCol(rows,exclude){ const n=Math.min(rows.length,8); let bestC=-1,bestNeg=-1; for(let c=0;c<(rows[0]||[]).length;c++){ if(c===exclude) continue; let ok=0,neg=0; for(let r=0;r<n;r++){ const v=parseNum((rows[r]||[])[c]); if(!isNaN(v)){ok++; if(v<0)neg++;} } if(ok>=Math.ceil(n*0.6) && (neg>bestNeg || (neg===bestNeg && ok>0 && bestC<0))){ bestNeg=neg; bestC=c; } } return bestC; }
@@ -1082,23 +1141,36 @@ function parseDate(v,order){
   return null;
 }
 function impRefresh(){
-  if(!impParsed) return;
-  const dCol=+document.getElementById('imp-date').value;
-  const pCol=+document.getElementById('imp-pnl').value;
-  const sCol=+document.getElementById('imp-sym').value;
-  const order=document.getElementById('imp-dateorder').value;
   const cap=parseNum(document.getElementById('imp-capital').value);
   const buckets={}; let ok=0, bad=0;
-  impParsed.rows.forEach(r=>{
-    const dt=parseDate(r[dCol],order); const pnl=parseNum(r[pCol]);
+  const add=(dt,pnl,detail)=>{
     if(!dt||isNaN(pnl)){ bad++; return; }
     ok++;
     const key=dt.y+'-'+dt.m;
     if(!buckets[key]) buckets[key]={y:dt.y,m:dt.m,pnl:0,trades:0,wins:0,losses:0,list:[]};
     const b=buckets[key];
     b.pnl+=pnl; b.trades++; if(pnl>0)b.wins++; else if(pnl<0)b.losses++;
-    b.list.push({ inst: sCol>=0?(r[sCol]||''):'', dir:'long', res: pnl>=0?'win':'loss', pnl:(pnl>0?'+':'')+Math.round(pnl*100)/100, date:'' });
-  });
+    b.list.push(detail);
+  };
+  if(impMode==='json'){
+    const pv=parseNum(document.getElementById('imp-pv').value)||0;
+    const src=document.getElementById('imp-datesrc').value;
+    impTrades.forEach(t=>{
+      const iso = src==='entryTime'? (t.entryISO||t.exitISO) : (t.exitISO||t.entryISO);
+      const dt=parseDate(iso,'auto'); const pnl=tradePnl(t,pv);
+      add(dt,pnl,{ inst:t.symbol||'', dir:t.dir, res: pnl>=0?'win':'loss', pnl:(pnl>0?'+':'')+Math.round(pnl*100)/100, date:(iso||'').split('T')[0] });
+    });
+  } else {
+    if(!impParsed) return;
+    const dCol=+document.getElementById('imp-date').value;
+    const pCol=+document.getElementById('imp-pnl').value;
+    const sCol=+document.getElementById('imp-sym').value;
+    const order=document.getElementById('imp-dateorder').value;
+    impParsed.rows.forEach(r=>{
+      const dt=parseDate(r[dCol],order); const pnl=parseNum(r[pCol]);
+      add(dt,pnl,{ inst: sCol>=0?(r[sCol]||''):'', dir:'long', res: pnl>=0?'win':'loss', pnl:(pnl>0?'+':'')+Math.round(pnl*100)/100, date:'' });
+    });
+  }
   let arr=Object.values(buckets).sort((a,b)=>(a.y-b.y)||(a.m-b.m));
   if(cap>0){ let bal=cap; arr.forEach(b=>{ b.pct=+(b.pnl/bal*100).toFixed(2); bal+=b.pnl; }); }
   else arr.forEach(b=>b.pct=0);
