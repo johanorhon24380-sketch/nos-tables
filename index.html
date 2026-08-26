@@ -453,9 +453,10 @@
         <span style="flex:1;height:1px;background:var(--border)"></span><span style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em">ou coller</span><span style="flex:1;height:1px;background:var(--border)"></span>
       </div>
       <div class="fg" style="margin:0">
-        <textarea id="imp-paste" placeholder='Colle ton JSON de trades ([ { "symbol":"NQ", "direction":"short", "entry":..., "exit":... }, ... ]) ou un CSV avec sa ligne d’en-tête…' style="min-height:90px;font-family:'JetBrains Mono',monospace;font-size:.78rem"></textarea>
+        <textarea id="imp-paste" oninput="impAuto()" placeholder='Colle ton JSON de trades ([ { "symbol":"NQ", "direction":"short", "entry":..., "exit":... }, ... ]) ou un CSV avec sa ligne d’en-tête…' style="min-height:90px;font-family:'JetBrains Mono',monospace;font-size:.78rem"></textarea>
       </div>
       <button class="btn btn-accent" onclick="impAnalyze()" style="width:100%;justify-content:center;margin-top:10px;padding:12px">🔎 Analyser</button>
+      <div id="imp-status" style="font-size:.78rem;color:var(--muted);margin-top:8px;text-align:center;display:none"></div>
 
       <!-- MAPPING + PREVIEW -->
       <div id="imp-config" style="display:none">
@@ -1062,7 +1063,7 @@ function openImport(){
   document.getElementById('imp-config').style.display='none';
   document.getElementById('imp-capital').value='';
   document.getElementById('imp-pv').value='';
-  impParsed=null; impAgg=null; impTrades=[]; impMode='csv'; disableApply();
+  impParsed=null; impAgg=null; impTrades=[]; impMode='csv'; disableApply(); impStatus('');
   document.getElementById('importOverlay').classList.add('active');
   document.querySelector('#importOverlay .modal-body').scrollTop=0;
 }
@@ -1084,19 +1085,36 @@ function splitLine(line,d){
   }
   out.push(cur); return out.map(s=>s.trim());
 }
-function impAnalyze(){
-  const text=document.getElementById('imp-paste').value.replace(/\r/g,'').trim();
-  if(!text){ toast('Colle un JSON/CSV ou choisis un fichier'); return; }
-  // ── détection JSON (format NinjaTrader / liste de trades) ──
-  if(text[0]==='['||text[0]==='{'){
-    let data=null; try{ data=JSON.parse(text); }catch(e){ data=null; }
-    if(data){
-      const arr=Array.isArray(data)?data:(Array.isArray(data.trades)?data.trades:(Array.isArray(data.data)?data.data:null));
-      if(arr&&arr.length&&typeof arr[0]==='object'){ return impAnalyzeJson(arr); }
-    }
+let _impT=null;
+function impAuto(){ clearTimeout(_impT); _impT=setTimeout(()=>impAnalyze(true),250); }
+function impStatus(msg,color){ const s=document.getElementById('imp-status'); if(!s) return; if(!msg){ s.style.display='none'; return; } s.style.display='block'; s.style.color=color||'var(--muted)'; s.textContent=msg; }
+function tryParseTrades(text){
+  let data=null;
+  try{ data=JSON.parse(text); }catch(_){}
+  if(!data){ const s=text.indexOf('['), e=text.lastIndexOf(']'); if(s>=0&&e>s){ try{ data=JSON.parse(text.slice(s,e+1)); }catch(__){} } }
+  if(!data){ const s=text.indexOf('{'), e=text.lastIndexOf('}'); if(s>=0&&e>s){ try{ data=JSON.parse('['+text.slice(s,e+1)+']'); }catch(__){} } }
+  if(!data) return null;
+  const arr=Array.isArray(data)?data:(Array.isArray(data.trades)?data.trades:(Array.isArray(data.data)?data.data:(typeof data==='object'?[data]:null)));
+  if(arr && arr.length && typeof arr[0]==='object' && !Array.isArray(arr[0])) return arr;
+  return null;
+}
+function impAnalyze(silent){
+  let text=document.getElementById('imp-paste').value.replace(/\r/g,'').trim();
+  text=text.replace(/^```[a-zA-Z]*\s*/,'').replace(/```\s*$/,'').trim();  // enlève d'éventuelles balises markdown
+  if(!text){ if(!silent) toast('Colle un JSON/CSV ou choisis un fichier'); document.getElementById('imp-config').style.display='none'; impStatus(''); disableApply(); return; }
+  // ── JSON (liste de trades, format NinjaTrader) ──
+  const looksJson = /[[{]/.test(text[0]) || /"(symbol|direction|entry|exit|entryTime)"/.test(text);
+  if(looksJson){
+    const arr=tryParseTrades(text);
+    if(arr){ impStatus('✅ JSON reconnu ('+arr.length+' trades)','var(--green)'); return impAnalyzeJson(arr); }
+    impStatus('⚠️ JSON non valide — vérifie que tu as bien copié tout le bloc, des [ jusqu\'aux ].','var(--gold)');
+    if(!silent) toast('⚠️ JSON non valide');
+    document.getElementById('imp-config').style.display='none'; disableApply(); return;
   }
+  // ── CSV ──
   const lines=text.split('\n').filter(l=>l.trim());
-  if(lines.length<2){ toast('Pas assez de lignes'); return; }
+  if(lines.length<2){ if(!silent) toast('Pas assez de lignes'); disableApply(); return; }
+  impStatus('✅ CSV reconnu ('+(lines.length-1)+' lignes)','var(--green)');
   // détecter le séparateur
   let delim=',',best=0;
   [',',';','\t','|'].forEach(d=>{ const n=lines[0].split(d).length; if(n>best){best=n;delim=d;} });
@@ -1242,7 +1260,8 @@ function impRefresh(){
       `</tbody></table>`;
     enableApply();
   } else {
-    document.getElementById('imp-preview').innerHTML='<div style="padding:16px;text-align:center;color:var(--muted2);font-size:.82rem">Aucun trade reconnu — vérifie les colonnes Date et P&L.</div>';
+    const why = impMode==='json' ? 'Dates non reconnues dans le JSON (champ entryTime/exitTime).' : 'Vérifie les colonnes Date et P&L.';
+    document.getElementById('imp-preview').innerHTML='<div style="padding:16px;text-align:center;color:var(--muted2);font-size:.82rem">Aucun trade exploitable — '+why+'</div>';
     disableApply();
   }
 }
