@@ -158,15 +158,18 @@
   .foot-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted2);font-size:.78rem;}
 
   /* ── MODALS ── */
-  .overlay{position:fixed;inset:0;background:rgba(3,6,12,.72);backdrop-filter:blur(6px);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:24px 14px;overflow-y:auto;}
+  .overlay{position:fixed;inset:0;background:rgba(3,6,12,.75);backdrop-filter:blur(6px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px 14px;}
   .overlay.active{display:flex;}
-  .modal{background:linear-gradient(170deg,var(--surface),var(--bg2));border:1px solid var(--border2);border-radius:22px;width:100%;max-width:560px;box-shadow:var(--shadow-lg);animation:slideUp .28s ease;margin:auto;}
+  .modal{display:flex;flex-direction:column;background:linear-gradient(170deg,var(--surface),var(--bg2));border:1px solid var(--border2);border-radius:22px;width:100%;max-width:560px;max-height:92vh;overflow:hidden;box-shadow:var(--shadow-lg);animation:slideUp .28s ease;}
   @keyframes slideUp{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 22px;border-bottom:1px solid var(--border);}
+  .modal-head{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);}
   .modal-head h2{font-family:'Sora',sans-serif;font-weight:700;font-size:1.2rem;display:flex;align-items:center;gap:9px;}
   .modal-x{background:var(--surface2);border:1px solid var(--border2);border-radius:9px;width:34px;height:34px;color:var(--muted);cursor:pointer;font-size:1rem;}
   .modal-x:hover{color:var(--text);}
-  .modal-body{padding:20px 22px;}
+  .modal-body{padding:20px 22px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;}
+  .disclosure{width:100%;display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1.5px solid var(--border2);border-radius:11px;padding:12px 14px;color:var(--text);font-family:'Inter',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:border-color .15s;}
+  .disclosure:hover{border-color:var(--accent);}
+  .disclosure span:last-child{color:var(--muted);}
   .fg{margin-bottom:15px;}
   .fg label{display:block;font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
   .fg input,.fg select,.fg textarea{width:100%;background:var(--bg2);border:1.5px solid var(--border2);border-radius:11px;padding:11px 13px;color:var(--text);font-family:'Inter',sans-serif;font-size:.92rem;outline:none;transition:border-color .18s;}
@@ -177,7 +180,7 @@
   .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
   .check{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:.9rem;color:var(--text);padding:10px 0;}
   .check input{width:auto;accent-color:var(--gold);width:18px;height:18px;}
-  .modal-foot{display:flex;gap:11px;padding:16px 22px 20px;}
+  .modal-foot{flex-shrink:0;display:flex;gap:11px;padding:14px 22px 18px;border-top:1px solid var(--border);background:var(--bg2);}
   .modal-foot .btn{flex:1;justify-content:center;padding:13px;font-size:.92rem;}
   .btn-cancel{background:var(--surface2);border:1px solid var(--border2);color:var(--muted);}
   .btn-cancel:hover{color:var(--text);}
@@ -215,11 +218,20 @@
 
   @media(max-width:560px){
     .brand-sub{display:none;}
-    .hero{padding:32px 0 8px;}
+    .hero{padding:30px 0 8px;}
+    .hero-logo{width:112px;height:112px;}
     .grid3{grid-template-columns:1fr;}
     .kpi-val{font-size:1.5rem;}
     .btn-accent span.lbl,.btn-ghost span.lbl{display:none;}
+    .btn-lock{width:44px;height:44px;}
+    .overlay{padding:0;align-items:flex-end;}
+    .modal{max-width:100%;max-height:94vh;border-radius:22px 22px 0 0;border-bottom:none;animation:sheetUp .3s cubic-bezier(.2,.9,.3,1);}
+    @keyframes sheetUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+    .modal-head{padding:16px 18px;}
+    .modal-body{padding:16px 18px;}
+    .modal-foot{padding:12px 18px calc(14px + env(safe-area-inset-bottom));}
   }
+  @media(max-width:380px){ .grid2{grid-template-columns:1fr;} }
 </style>
 </head>
 <body>
@@ -321,25 +333,25 @@
         </div>
         <div class="fg">
           <label>Année</label>
-          <input type="number" id="m-year" value="2026" min="2000" max="2100">
+          <input type="number" inputmode="numeric" id="m-year" value="2026" min="2000" max="2100">
         </div>
       </div>
       <div class="grid2">
         <div class="fg">
           <label>Performance (%)</label>
-          <input type="number" id="m-pct" step="0.01" placeholder="Ex: 8.5 ou -3.2">
+          <input type="number" inputmode="decimal" id="m-pct" step="0.01" placeholder="Ex: 8.5 ou -3.2">
           <div class="hint">Rendement du mois. Négatif = perte.</div>
         </div>
         <div class="fg">
           <label>P&L net (montant)</label>
-          <input type="number" id="m-pnl" step="0.01" placeholder="Ex: 4200">
+          <input type="number" inputmode="decimal" id="m-pnl" step="0.01" placeholder="Ex: 4200">
           <div class="hint">Optionnel — dans votre devise.</div>
         </div>
       </div>
       <div class="grid3">
-        <div class="fg"><label>Trades</label><input type="number" id="m-trades" min="0" placeholder="0"></div>
-        <div class="fg"><label>Gagnants</label><input type="number" id="m-wins" min="0" placeholder="0"></div>
-        <div class="fg"><label>Perdants</label><input type="number" id="m-losses" min="0" placeholder="0"></div>
+        <div class="fg"><label>Trades</label><input type="number" inputmode="numeric" id="m-trades" min="0" placeholder="0"></div>
+        <div class="fg"><label>Gagnants</label><input type="number" inputmode="numeric" id="m-wins" min="0" placeholder="0"></div>
+        <div class="fg"><label>Perdants</label><input type="number" inputmode="numeric" id="m-losses" min="0" placeholder="0"></div>
       </div>
       <div class="fg">
         <label>Commentaire du mois</label>
@@ -349,7 +361,8 @@
 
       <!-- trades -->
       <div class="fg" style="margin-top:8px">
-        <label>Trades détaillés (optionnel)</label>
+        <button type="button" class="disclosure" onclick="toggleTradeSection()"><span>📋 Ajouter les trades du mois (optionnel)</span><span id="tradesChev">▾</span></button>
+        <div id="tradesSection" style="display:none;margin-top:12px">
         <div class="te-list" id="teList"></div>
         <div class="add-trade-box">
           <div class="grid3" style="margin-bottom:8px">
@@ -363,6 +376,7 @@
           </div>
           <div class="fg" style="margin-bottom:8px"><label>Capture d'écran (optionnel)</label><input type="file" id="t-img" accept="image/*"></div>
           <button class="btn btn-ghost btn-sm" onclick="addTrade()" style="width:100%;justify-content:center">＋ Ajouter ce trade</button>
+        </div>
         </div>
       </div>
     </div>
@@ -745,9 +759,19 @@ function openMonth(id=null){
     document.getElementById('m-verified').checked=false;
   }
   clearTradeInputs(); renderTeList();
+  setTradeSection(pendingTrades.length>0);
   document.getElementById('monthOverlay').classList.add('active');
+  document.querySelector('#monthOverlay .modal-body').scrollTop=0;
 }
 function closeMonth(){ document.getElementById('monthOverlay').classList.remove('active'); editId=null; }
+function setTradeSection(open){
+  document.getElementById('tradesSection').style.display = open?'block':'none';
+  document.getElementById('tradesChev').textContent = open?'▴':'▾';
+}
+function toggleTradeSection(){
+  const open = document.getElementById('tradesSection').style.display==='none';
+  setTradeSection(open);
+}
 
 function clearTradeInputs(){
   document.getElementById('t-inst').value='';
