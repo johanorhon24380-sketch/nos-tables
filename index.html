@@ -294,6 +294,7 @@
     <button class="btn btn-gold" onclick="openImport()" style="padding:9px 15px;font-size:.85rem">📥 Importer un CSV</button>
     <button class="btn btn-ghost" onclick="openSettings()">⚙️ Réglages</button>
     <button class="btn btn-ghost" onclick="seedDemo()">✨ Données d'exemple</button>
+    <button class="btn btn-ghost" onclick="clearAllMonths()" style="color:var(--red);border-color:rgba(240,97,109,.4)">🗑️ Tout effacer</button>
   </div>
 
   <!-- CHART -->
@@ -525,6 +526,20 @@
         <p>À scanner ou à afficher dans vos vidéos / stories.</p>
         <div class="qr-wrap"><div id="qrcode"></div></div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CONFIRM ── -->
+<div class="overlay" id="confirmOverlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-body" style="text-align:center;padding-top:26px">
+      <div style="font-size:2.2rem;margin-bottom:10px">⚠️</div>
+      <p id="confirmMsg" style="color:var(--text);font-size:.96rem;line-height:1.5"></p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-cancel" onclick="confirmNo()">Annuler</button>
+      <button class="btn btn-save" id="confirmYes" style="background:linear-gradient(135deg,var(--red),#b83b45);color:#fff">Supprimer</button>
     </div>
   </div>
 </div>
@@ -923,10 +938,29 @@ function saveMonth(){
   saveMonths(); closeMonth(); renderAll();
 }
 function deleteMonth(id){
-  if(!confirm('Supprimer ce mois ?')) return;
-  months=months.filter(x=>String(x.id)!==String(id));
-  saveMonths(); renderAll(); toast('🗑️ Supprimé');
+  if(!isAdmin) return;
+  askConfirm('Supprimer ce mois ? Cette action est définitive.', ()=>{
+    months=months.filter(x=>String(x.id)!==String(id));
+    saveMonths(); renderAll(); toast('🗑️ Supprimé');
+  });
 }
+function clearAllMonths(){
+  if(!isAdmin) return;
+  if(!months.length){ toast('Aucune donnée à effacer'); return; }
+  askConfirm(`Tout effacer ? Les ${months.length} mois publiés seront supprimés définitivement.`, ()=>{
+    months=[]; saveMonths(); renderAll(); toast('🗑️ Toutes les données ont été effacées');
+  }, 'Tout effacer');
+}
+// Fenêtre de confirmation intégrée (les popups natives sont parfois bloquées sur mobile)
+let _confirmCb=null;
+function askConfirm(msg, cb, yesLabel){
+  document.getElementById('confirmMsg').textContent=msg;
+  const y=document.getElementById('confirmYes'); y.textContent=yesLabel||'Supprimer';
+  _confirmCb=cb;
+  y.onclick=()=>{ document.getElementById('confirmOverlay').classList.remove('active'); const c=_confirmCb; _confirmCb=null; if(c) c(); };
+  document.getElementById('confirmOverlay').classList.add('active');
+}
+function confirmNo(){ document.getElementById('confirmOverlay').classList.remove('active'); _confirmCb=null; }
 
 // ── SETTINGS ──
 function openSettings(){
@@ -954,7 +988,6 @@ function saveSettings(){
 // ── DEMO DATA ──
 function seedDemo(){
   if(!isAdmin) return;
-  if(months.length && !confirm('Ajouter des mois d\'exemple aux données existantes ?')) return;
   const demo=[
     {y:2026,m:0,pct:6.4,pnl:3200,trades:38,wins:26,losses:12,note:'Bon démarrage d\'année, discipline respectée sur les setups A+.',verified:true},
     {y:2026,m:1,pct:-2.1,pnl:-1050,trades:41,wins:19,losses:22,note:'Mois compliqué, marché en range. J\'ai réduit la taille pour protéger le capital.',verified:true},
@@ -1078,7 +1111,8 @@ function impAnalyze(){
 function impAnalyzeJson(arr){
   impMode='json';
   impTrades = arr.map(t=>{
-    const dir = /short|sell|vente/i.test(String(t.direction||t.side||t.dir||'')) ? 'short' : 'long';
+    const dRaw = String(t.direction||t.side||t.dir||t.type||t.action||'').trim();
+    const dir = /short|sell|vend|vente|ask|^s$|^-1$|sold/i.test(dRaw) ? 'short' : 'long';
     const contracts = +(t.contracts||t.qty||t.quantity||t.size||1) || 1;
     const entry = parseNum(t.entry!=null?t.entry:t.entryPrice), exit = parseNum(t.exit!=null?t.exit:t.exitPrice);
     const fees = parseNum(t.fees!=null?t.fees:(t.commission!=null?t.commission:0)) || 0;
