@@ -192,6 +192,29 @@
   .te-item .x{margin-left:auto;background:none;border:none;color:var(--red);cursor:pointer;font-size:.9rem;}
   .add-trade-box{border:1.5px dashed var(--border2);border-radius:12px;padding:12px;}
 
+  /* CSV import */
+  .imp-drop{border:1.5px dashed var(--border2);border-radius:12px;padding:16px;text-align:center;background:var(--bg2);position:relative;transition:border-color .15s;}
+  .imp-drop:hover{border-color:var(--accent);}
+  .imp-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+  .imp-drop .ic{font-size:1.6rem;}
+  .imp-drop p{font-size:.82rem;color:var(--muted);margin-top:4px;}
+  .imp-drop strong{color:var(--accent2);}
+  .imp-step{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:12px;}
+  .imp-step h4{font-size:.8rem;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:11px;}
+  .imp-map-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .imp-note{font-size:.78rem;color:var(--muted);margin-top:8px;line-height:1.4;}
+  .imp-note b{color:var(--text);}
+  .imp-preview{width:100%;overflow-x:auto;margin-top:10px;border:1px solid var(--border);border-radius:10px;}
+  .imp-preview table{width:100%;border-collapse:collapse;font-size:.8rem;min-width:400px;}
+  .imp-preview th{background:var(--surface2);color:var(--muted);text-align:right;padding:8px 10px;font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;position:sticky;top:0;}
+  .imp-preview th:first-child{text-align:left;}
+  .imp-preview td{padding:8px 10px;text-align:right;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;}
+  .imp-preview td:first-child{text-align:left;font-family:'Inter',sans-serif;font-weight:600;text-transform:capitalize;}
+  .imp-summary{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+  .imp-chip{background:var(--surface2);border:1px solid var(--border2);border-radius:50px;padding:5px 12px;font-size:.78rem;color:var(--muted);}
+  .imp-chip b{color:var(--text);}
+  .imp-chip.warn{border-color:#8a6d1f;color:var(--gold);}
+
   /* share */
   .share-block{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:15px;margin-bottom:14px;}
   .share-block h4{font-size:.82rem;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:7px;}
@@ -268,6 +291,7 @@
   <div class="admin-bar" id="adminBar">
     <span class="ab-label">🔓 Mode propriétaire actif</span>
     <button class="btn btn-accent" onclick="openMonth()">＋ <span class="lbl">Ajouter un mois</span></button>
+    <button class="btn btn-gold" onclick="openImport()" style="padding:9px 15px;font-size:.85rem">📥 Importer un CSV</button>
     <button class="btn btn-ghost" onclick="openSettings()">⚙️ Réglages</button>
     <button class="btn btn-ghost" onclick="seedDemo()">✨ Données d'exemple</button>
   </div>
@@ -408,6 +432,64 @@
     <div class="modal-foot">
       <button class="btn btn-cancel" onclick="closeSettings()">Annuler</button>
       <button class="btn btn-save" onclick="saveSettings()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── IMPORT CSV MODAL ── -->
+<div class="overlay" id="importOverlay">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-head"><h2>📥 Importer mes trades</h2><button class="modal-x" onclick="closeImport()">✕</button></div>
+    <div class="modal-body">
+      <p class="imp-note">Exporte l'historique de tes trades depuis ta plateforme (Tradovate, NinjaTrader, TradingView, MT4/5, prop firm…) en <b>CSV</b>, puis dépose le fichier ici — ou colle directement les lignes. Le site regroupe tout <b>par mois</b> automatiquement.</p>
+
+      <div class="imp-drop" style="margin-top:12px">
+        <input type="file" id="imp-file" accept=".csv,.tsv,.txt" onchange="impFile(event)">
+        <div class="ic">📄</div>
+        <p><strong>Choisir un fichier CSV</strong> ou glisser-déposer</p>
+      </div>
+      <div class="form-divider" style="display:flex;align-items:center;gap:12px;margin:14px 0;color:var(--muted2)">
+        <span style="flex:1;height:1px;background:var(--border)"></span><span style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em">ou coller</span><span style="flex:1;height:1px;background:var(--border)"></span>
+      </div>
+      <div class="fg" style="margin:0">
+        <textarea id="imp-paste" placeholder="Colle ici les lignes de ton export (avec la ligne d'en-tête)…" style="min-height:90px;font-family:'JetBrains Mono',monospace;font-size:.78rem"></textarea>
+      </div>
+      <button class="btn btn-accent" onclick="impAnalyze()" style="width:100%;justify-content:center;margin-top:10px;padding:12px">🔎 Analyser</button>
+
+      <!-- MAPPING + PREVIEW -->
+      <div id="imp-config" style="display:none">
+        <div class="imp-step">
+          <h4>1 · Colonnes détectées</h4>
+          <div class="imp-map-row">
+            <div class="fg" style="margin:0"><label>Date du trade</label><select id="imp-date"></select></div>
+            <div class="fg" style="margin:0"><label>Gain / Perte (P&L)</label><select id="imp-pnl"></select></div>
+          </div>
+          <div class="imp-map-row" style="margin-top:10px">
+            <div class="fg" style="margin:0"><label>Instrument (option.)</label><select id="imp-sym"></select></div>
+            <div class="fg" style="margin:0"><label>Format de date</label>
+              <select id="imp-dateorder"><option value="auto">Auto</option><option value="dmy">JJ/MM/AAAA</option><option value="mdy">MM/JJ/AAAA</option></select>
+            </div>
+          </div>
+        </div>
+        <div class="imp-step">
+          <h4>2 · Calcul du %</h4>
+          <div class="fg" style="margin:0"><label>Capital de départ du compte (pour calculer le %)</label>
+            <input type="number" inputmode="decimal" id="imp-capital" placeholder="Ex: 50000">
+            <div class="hint">Le % de chaque mois = P&L du mois ÷ capital (capitalisé). Laisse vide pour n'afficher que les montants.</div>
+          </div>
+        </div>
+        <div class="imp-step">
+          <h4>3 · Aperçu par mois</h4>
+          <div class="imp-summary" id="imp-summary"></div>
+          <div class="imp-preview" id="imp-preview"></div>
+          <label class="check" style="margin-top:6px"><input type="checkbox" id="imp-detail"> Inclure le détail de chaque trade dans les fiches</label>
+          <label class="check" style="padding-top:0"><input type="checkbox" id="imp-replace" checked> Remplacer les mois déjà existants</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-cancel" onclick="closeImport()">Annuler</button>
+      <button class="btn btn-save" id="imp-apply" onclick="impApply()" style="opacity:.5;pointer-events:none">📥 Importer</button>
     </div>
   </div>
 </div>
@@ -906,6 +988,163 @@ function sync(msg){ let i=document.getElementById('syncInd'); if(!i){ i=document
 function syncDone(){ const i=document.getElementById('syncInd'); if(i){ i.textContent='✅ Synchronisé'; setTimeout(()=>i.style.opacity='0',1600);} }
 [...document.querySelectorAll('.overlay')].forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('active'); }));
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ [...document.querySelectorAll('.overlay.active')].forEach(o=>o.classList.remove('active')); closeLb(); } });
+
+// ── CSV IMPORT ──
+let impParsed=null, impAgg=null;
+function openImport(){
+  if(!isAdmin) return;
+  document.getElementById('imp-file').value='';
+  document.getElementById('imp-paste').value='';
+  document.getElementById('imp-config').style.display='none';
+  document.getElementById('imp-capital').value='';
+  impParsed=null; impAgg=null; disableApply();
+  document.getElementById('importOverlay').classList.add('active');
+  document.querySelector('#importOverlay .modal-body').scrollTop=0;
+}
+function closeImport(){ document.getElementById('importOverlay').classList.remove('active'); }
+function disableApply(){ const b=document.getElementById('imp-apply'); b.style.opacity='.5'; b.style.pointerEvents='none'; }
+function enableApply(){ const b=document.getElementById('imp-apply'); b.style.opacity='1'; b.style.pointerEvents='auto'; }
+
+function impFile(e){
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=ev=>{ document.getElementById('imp-paste').value=ev.target.result; impAnalyze(); };
+  rd.readAsText(f);
+}
+function splitLine(line,d){
+  const out=[]; let cur='',q=false;
+  for(let i=0;i<line.length;i++){ const c=line[i];
+    if(q){ if(c==='"'){ if(line[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else { if(c==='"') q=true; else if(c===d){ out.push(cur); cur=''; } else cur+=c; }
+  }
+  out.push(cur); return out.map(s=>s.trim());
+}
+function impAnalyze(){
+  const text=document.getElementById('imp-paste').value.replace(/\r/g,'').trim();
+  if(!text){ toast('Colle un CSV ou choisis un fichier'); return; }
+  const lines=text.split('\n').filter(l=>l.trim());
+  if(lines.length<2){ toast('Pas assez de lignes'); return; }
+  // détecter le séparateur
+  let delim=',',best=0;
+  [',',';','\t','|'].forEach(d=>{ const n=lines[0].split(d).length; if(n>best){best=n;delim=d;} });
+  const headers=splitLine(lines[0],delim);
+  const rows=lines.slice(1).map(l=>splitLine(l,delim)).filter(r=>r.length>=2 && r.some(c=>c!==''));
+  impParsed={headers,rows};
+  // remplir les selects
+  const opts=(sel,extra)=>{ sel.innerHTML=(extra?`<option value="-1">— aucun —</option>`:'')+headers.map((h,i)=>`<option value="${i}">${escapeHtml(h||('Colonne '+(i+1)))}</option>`).join(''); };
+  const dSel=document.getElementById('imp-date'), pSel=document.getElementById('imp-pnl'), sSel=document.getElementById('imp-sym');
+  opts(dSel,false); opts(pSel,false); opts(sSel,true);
+  // auto-détection
+  const find=(rx)=>{ for(let i=0;i<headers.length;i++){ if(rx.test((headers[i]||'').toLowerCase())) return i; } return -1; };
+  let di=find(/date|jour|time|closed|exit|clôtur|ferm/);
+  let pi=find(/realized|réalis|realised|p.?[\/ ]?l|pnl|profit|gain|net|result|résultat|montant/);
+  let si=find(/symbol|instrument|ticker|contract|produit|market|actif/);
+  if(di<0) di=guessDateCol(rows); if(di<0) di=0;
+  if(pi<0) pi=guessNumCol(rows,di); if(pi<0) pi=Math.min(1,headers.length-1);
+  dSel.value=di; pSel.value=pi; sSel.value=si;
+  document.getElementById('imp-config').style.display='block';
+  [dSel,pSel,sSel,document.getElementById('imp-dateorder'),document.getElementById('imp-capital')].forEach(el=>{ el.oninput=impRefresh; el.onchange=impRefresh; });
+  impRefresh();
+}
+function guessDateCol(rows){ const n=Math.min(rows.length,8); for(let c=0;c<(rows[0]||[]).length;c++){ let ok=0; for(let r=0;r<n;r++){ if(parseDate((rows[r]||[])[c],'auto')) ok++; } if(ok>=Math.ceil(n*0.6)) return c; } return -1; }
+function guessNumCol(rows,exclude){ const n=Math.min(rows.length,8); let bestC=-1,bestNeg=-1; for(let c=0;c<(rows[0]||[]).length;c++){ if(c===exclude) continue; let ok=0,neg=0; for(let r=0;r<n;r++){ const v=parseNum((rows[r]||[])[c]); if(!isNaN(v)){ok++; if(v<0)neg++;} } if(ok>=Math.ceil(n*0.6) && (neg>bestNeg || (neg===bestNeg && ok>0 && bestC<0))){ bestNeg=neg; bestC=c; } } return bestC; }
+
+function parseNum(v){
+  if(v==null) return NaN;
+  let s=String(v).trim(); if(!s) return NaN;
+  let neg=false;
+  if(/^\(.*\)$/.test(s)){ neg=true; s=s.slice(1,-1); }
+  if(/-/.test(s)) neg=true;
+  s=s.replace(/[^0-9.,]/g,'');
+  if(s.includes(',')&&s.includes('.')){
+    if(s.lastIndexOf(',')>s.lastIndexOf('.')) s=s.replace(/\./g,'').replace(',','.');
+    else s=s.replace(/,/g,'');
+  } else if(s.includes(',')){
+    const p=s.split(','); if(p.length===2 && p[1].length<=2) s=p[0]+'.'+p[1]; else s=s.replace(/,/g,'');
+  }
+  let n=parseFloat(s); if(isNaN(n)) return NaN; return neg?-Math.abs(n):n;
+}
+function parseDate(v,order){
+  if(v==null) return null;
+  let s=String(v).trim().split(/[ T]/)[0]; if(!s) return null;
+  let m;
+  if(m=s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/)) return {y:+m[1],m:+m[2]-1};
+  if(m=s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})$/)){
+    let a=+m[1],b=+m[2],y=+m[3]; if(y<100) y+=2000;
+    let dd,mm;
+    if(order==='mdy'){ mm=a; dd=b; }
+    else if(order==='dmy'){ dd=a; mm=b; }
+    else { if(a>12){ dd=a; mm=b; } else if(b>12){ mm=a; dd=b; } else { dd=a; mm=b; } }
+    if(mm<1||mm>12) return null;
+    return {y, m:mm-1};
+  }
+  const d=new Date(s); if(!isNaN(d.getTime()) && d.getFullYear()>1990) return {y:d.getFullYear(), m:d.getMonth()};
+  return null;
+}
+function impRefresh(){
+  if(!impParsed) return;
+  const dCol=+document.getElementById('imp-date').value;
+  const pCol=+document.getElementById('imp-pnl').value;
+  const sCol=+document.getElementById('imp-sym').value;
+  const order=document.getElementById('imp-dateorder').value;
+  const cap=parseNum(document.getElementById('imp-capital').value);
+  const buckets={}; let ok=0, bad=0;
+  impParsed.rows.forEach(r=>{
+    const dt=parseDate(r[dCol],order); const pnl=parseNum(r[pCol]);
+    if(!dt||isNaN(pnl)){ bad++; return; }
+    ok++;
+    const key=dt.y+'-'+dt.m;
+    if(!buckets[key]) buckets[key]={y:dt.y,m:dt.m,pnl:0,trades:0,wins:0,losses:0,list:[]};
+    const b=buckets[key];
+    b.pnl+=pnl; b.trades++; if(pnl>0)b.wins++; else if(pnl<0)b.losses++;
+    b.list.push({ inst: sCol>=0?(r[sCol]||''):'', dir:'long', res: pnl>=0?'win':'loss', pnl:(pnl>0?'+':'')+Math.round(pnl*100)/100, date:'' });
+  });
+  let arr=Object.values(buckets).sort((a,b)=>(a.y-b.y)||(a.m-b.m));
+  if(cap>0){ let bal=cap; arr.forEach(b=>{ b.pct=+(b.pnl/bal*100).toFixed(2); bal+=b.pnl; }); }
+  else arr.forEach(b=>b.pct=0);
+  impAgg={arr,ok,bad,hasCap:cap>0};
+  // summary chips
+  document.getElementById('imp-summary').innerHTML =
+    `<span class="imp-chip"><b>${ok}</b> trades lus</span>`+
+    `<span class="imp-chip"><b>${arr.length}</b> mois</span>`+
+    (bad? `<span class="imp-chip warn">⚠️ <b>${bad}</b> lignes ignorées</span>`:'')+
+    (!cap? `<span class="imp-chip warn">% non calculé (capital vide)</span>`:'');
+  // preview table
+  if(arr.length){
+    document.getElementById('imp-preview').innerHTML =
+      `<table><thead><tr><th>Mois</th><th>%</th><th>P&L</th><th>Trades</th><th>G</th><th>P</th></tr></thead><tbody>`+
+      arr.map(b=>`<tr><td>${MONTHS_FR[b.m].slice(0,3)} ${b.y}</td>`+
+        `<td class="${b.pct>=0?'pos':'neg'}">${b.pct?fmtPct(b.pct):'—'}</td>`+
+        `<td class="${b.pnl>=0?'pos':'neg'}">${b.pnl>0?'+':''}${fmtNum(Math.round(b.pnl))}</td>`+
+        `<td>${b.trades}</td><td class="pos">${b.wins}</td><td class="neg">${b.losses}</td></tr>`).join('')+
+      `</tbody></table>`;
+    enableApply();
+  } else {
+    document.getElementById('imp-preview').innerHTML='<div style="padding:16px;text-align:center;color:var(--muted2);font-size:.82rem">Aucun trade reconnu — vérifie les colonnes Date et P&L.</div>';
+    disableApply();
+  }
+}
+function impApply(){
+  if(!impAgg||!impAgg.arr.length) return;
+  const replace=document.getElementById('imp-replace').checked;
+  const detail=document.getElementById('imp-detail').checked;
+  let added=0, updated=0, skipped=0;
+  impAgg.arr.forEach(b=>{
+    const idx=months.findIndex(x=>x.y===b.y && x.m===b.m);
+    const rec={
+      id: (idx>=0?months[idx].id:Date.now()+Math.floor(Math.random()*10000)),
+      y:b.y, m:b.m, pct:b.pct||0, pnl:Math.round(b.pnl*100)/100,
+      trades:b.trades, wins:b.wins, losses:b.losses,
+      note: (idx>=0?months[idx].note:'')||'',
+      verified: idx>=0?!!months[idx].verified:false,
+      trades_list: detail ? b.list.slice(0,300) : (idx>=0?(months[idx].trades_list||[]):[])
+    };
+    if(idx>=0){ if(!replace){ skipped++; return; } months[idx]=rec; updated++; }
+    else { months.push(rec); added++; }
+  });
+  saveMonths(); renderAll(); closeImport();
+  toast(`✅ Import : ${added} ajouté(s), ${updated} mis à jour${skipped?', '+skipped+' ignoré(s)':''}`);
+}
 
 // ── INIT ──
 load(); renderAll();
