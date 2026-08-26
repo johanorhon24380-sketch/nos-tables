@@ -579,7 +579,7 @@ const firebaseConfig = {
 try { firebase.initializeApp(firebaseConfig); db = firebase.database(); }
 catch(e){ console.error('Firebase init', e); }
 
-const ROOT = 'trading';  // namespace séparé de l'app restaurants
+const ROOT = 'journalNQ/site';  // sous le nœud autorisé par les règles Firebase (journalNQ)
 
 // ── LOAD ──
 function load(){
