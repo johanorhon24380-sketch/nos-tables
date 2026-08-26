@@ -503,7 +503,7 @@
     </div>
     <div class="modal-foot">
       <button class="btn btn-cancel" onclick="closeImport()">Annuler</button>
-      <button class="btn btn-save" id="imp-apply" onclick="impApply()" style="opacity:.5;pointer-events:none">📥 Importer</button>
+      <button class="btn btn-save" id="imp-apply" onclick="impApply()" style="opacity:.55">📥 Importer</button>
     </div>
   </div>
 </div>
@@ -596,9 +596,8 @@ function load(){
 }
 
 function saveMonths(){
-  if(isReadOnly) return;
-  if(!db){ toast('⚠️ Pas de connexion à la base (hors-ligne)'); return; }
   if(!isAdmin) return;
+  if(!db){ toast('⚠️ Pas de connexion à la base (hors-ligne)'); return; }
   const obj={}; months.forEach(m=>obj[m.id]=sanitize(m));
   config.updated = Date.now();
   sync('💾 Sauvegarde...');
@@ -1068,8 +1067,9 @@ function openImport(){
   document.querySelector('#importOverlay .modal-body').scrollTop=0;
 }
 function closeImport(){ document.getElementById('importOverlay').classList.remove('active'); }
-function disableApply(){ const b=document.getElementById('imp-apply'); b.style.opacity='.5'; b.style.pointerEvents='none'; }
-function enableApply(){ const b=document.getElementById('imp-apply'); b.style.opacity='1'; b.style.pointerEvents='auto'; }
+// Le bouton reste TOUJOURS cliquable (on ne le désactive jamais) — l'opacité n'est qu'un indice visuel
+function disableApply(){ const b=document.getElementById('imp-apply'); if(b) b.style.opacity='.55'; }
+function enableApply(){ const b=document.getElementById('imp-apply'); if(b) b.style.opacity='1'; }
 
 function impFile(e){
   const f=e.target.files[0]; if(!f) return;
@@ -1266,7 +1266,14 @@ function impRefresh(){
   }
 }
 function impApply(){
-  if(!impAgg||!impAgg.arr.length) return;
+  // au cas où l'analyse n'a pas encore tourné (ex. collage sans event) → on relance
+  if(!impAgg||!impAgg.arr.length){ impAnalyze(); }
+  if(!impAgg||!impAgg.arr.length){
+    const t=document.getElementById('imp-paste').value.trim();
+    if(!t){ toast('⚠️ Colle d\'abord ton JSON ou CSV dans la zone'); }
+    else { toast('⚠️ Rien d\'exploitable — vois le message sous la zone de collage'); document.querySelector('#importOverlay .modal-body').scrollTop=0; }
+    return;
+  }
   const replace=document.getElementById('imp-replace').checked;
   const detail=document.getElementById('imp-detail').checked;
   let added=0, updated=0, skipped=0;
