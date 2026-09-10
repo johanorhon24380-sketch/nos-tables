@@ -161,6 +161,22 @@
   .details-toggle{margin-top:14px;font-size:.79rem;color:var(--accent-2);cursor:pointer;font-weight:600;user-select:none;}
   .details-box{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;}
   .empty{padding:40px;text-align:center;color:var(--muted);}
+  /* ===== matrice offre × conseiller ===== */
+  .ctrls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--line);}
+  .seg{display:inline-flex;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:11px;padding:3px;gap:3px;}
+  .seg button{background:transparent;border:none;color:var(--muted);padding:8px 15px;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s;}
+  .seg button.on{background:var(--accent-dim);color:#c9ffe4;}
+  .chkline{font-size:.79rem;color:var(--muted);display:inline-flex;align-items:center;gap:7px;cursor:pointer;margin-left:6px;}
+  .chkline input{accent-color:var(--accent);}
+  .band td{background:rgba(255,255,255,.035)!important;font-family:var(--disp);font-weight:600;font-size:.8rem;text-align:left!important;letter-spacing:.02em;color:var(--text);}
+  .band .bdot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:9px;vertical-align:middle;}
+  .band.os .bdot{background:var(--os);}.band.prev .bdot{background:var(--prev);}.band.oa .bdot{background:var(--oa);}
+  td.offcell{text-align:left!important;color:var(--text);font-weight:500;}
+  td.z{color:var(--faint);}
+  td.hot{color:var(--accent);}
+  td.tot{color:var(--text);}
+  tr.sub td{background:rgba(255,255,255,.02);font-weight:700;color:var(--muted);font-family:var(--mono);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  tr.sub td:first-child{text-align:left;font-family:var(--disp);font-size:.8rem;background:rgba(255,255,255,.02);}
   .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:35;}
 
   @media(max-width:900px){
@@ -211,7 +227,7 @@ const OFFERS_ADHES={
 };
 function catOf(o,set){for(const k of['os','prev','oa'])if(set[k].includes(o))return k;return 'oa';}
 
-let state=load(),route='dash',period='all';
+let state=load(),route='dash',period='all',resMetric='adhes',resHideZero=false;
 
 function load(){try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);}catch(e){}return demoState();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
@@ -310,7 +326,28 @@ function renderDash(){
   document.querySelectorAll('[data-goto]').forEach(el=>el.onclick=()=>go(+el.dataset.goto));
 }
 
-/* ===== SUIVI DE RÉSULTAT ===== */
+/* ===== SUIVI DE RÉSULTAT (détaillé, offre par offre) ===== */
+function matrixHTML(kind){
+  const offersSet=kind==='propos'?OFFERS_PROPOS:OFFERS_ADHES;
+  const cons=state.conseillers;
+  const counts=cons.map(c=>{const m={};c.contacts.filter(inPeriod).forEach(x=>{(kind==='propos'?x.propos:x.adhes).forEach(o=>m[o]=(m[o]||0)+1);});return m;});
+  const colTot=cons.map(()=>0);let grand=0,body='';
+  CATS.forEach(cat=>{
+    let rowsHtml='';const catCol=cons.map(()=>0);let catSum=0;
+    offersSet[cat.k].forEach(o=>{
+      const per=counts.map(m=>m[o]||0),tot=per.reduce((a,b)=>a+b,0);
+      if(resHideZero&&tot===0)return;
+      per.forEach((v,ci)=>{catCol[ci]+=v;colTot[ci]+=v;});catSum+=tot;grand+=tot;
+      rowsHtml+=`<tr><td class="offcell">${esc(o)}</td>${per.map(v=>`<td class="${v?'num-c hot':'z'}">${v||'·'}</td>`).join('')}<td class="num-c tot">${tot||'·'}</td></tr>`;
+    });
+    body+=`<tr class="band ${cat.k}"><td colspan="${cons.length+2}"><span class="bdot"></span>${cat.label}</td></tr>`;
+    body+=rowsHtml||`<tr><td class="offcell z">— aucune —</td>${cons.map(()=>'<td class="z">·</td>').join('')}<td class="z">·</td></tr>`;
+    body+=`<tr class="sub"><td>Sous-total ${cat.label}</td>${catCol.map(v=>`<td>${v}</td>`).join('')}<td>${catSum}</td></tr>`;
+  });
+  const head=`<tr><th>Offre</th>${cons.map(c=>`<th>${esc(c.name)}</th>`).join('')}<th>Total</th></tr>`;
+  const foot=`<tr><td>Total ${kind==='propos'?'propositions':'adhésions'}</td>${colTot.map(v=>`<td>${v}</td>`).join('')}<td>${grand}</td></tr>`;
+  return `<table><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+}
 function renderResult(){
   const T=teamStats();
   const row=(name,s,g)=>`<tr>
@@ -319,9 +356,9 @@ function renderResult(){
     <td class="num-c grp-os">${s.propos.os}</td><td class="num-c grp-prev">${s.propos.prev}</td><td class="num-c grp-oa">${s.propos.oa}</td><td class="num-c">${s.propos.total}</td>
     <td class="num-c grp-os">${s.ba.os}</td><td class="num-c grp-prev">${s.ba.prev}</td><td class="num-c grp-oa">${s.ba.oa}</td><td class="num-c">${s.ba.total}</td>
     <td class="num-c" style="color:var(--accent)">${s.taux}%</td></tr>`;
-  const rows=state.conseillers.map((c,i)=>row(c.name,stats(c),i)).join('');
+  const synth=state.conseillers.map((c,i)=>row(c.name,stats(c),i)).join('');
   document.getElementById('content').innerHTML=`
-    <div><div class="eyebrow">Analyse d'activité</div><div class="page-head"><h2>Suivi de résultat</h2></div></div>
+    <div><div class="eyebrow">Analyse d'activité détaillée</div><div class="page-head"><h2>Suivi de résultat</h2></div></div>
     ${periodSelect()}
     <div class="tiles">
       <div class="tile accent"><div class="flex">${ring(T.taux)}<div><div class="lbl">Transfo générale</div><div class="sub">BA ÷ propositions</div></div></div></div>
@@ -329,16 +366,29 @@ function renderResult(){
       <div class="tile blue"><div class="lbl">Propositions</div><div class="num">${T.propos.total}</div>${stack(T.propos.os,T.propos.prev,T.propos.oa)}${catLegend(T.propos)}</div>
       <div class="tile amber"><div class="lbl">Adhésions (BA)</div><div class="num">${T.ba.total}</div>${stack(T.ba.os,T.ba.prev,T.ba.oa)}${catLegend(T.ba)}</div>
     </div>
-    <div class="panel"><div class="panel-h">Détail par conseiller & catégorie</div><div class="scroll"><table>
+    <div class="panel">
+      <div class="panel-h">Détail par offre &amp; par conseiller</div>
+      <div class="ctrls">
+        <div class="seg">
+          <button class="${resMetric==='propos'?'on':''}" data-metric="propos">Propositions</button>
+          <button class="${resMetric==='adhes'?'on':''}" data-metric="adhes">Adhésions (BA)</button>
+        </div>
+        <label class="chkline"><input type="checkbox" id="hideZero" ${resHideZero?'checked':''}> Masquer les offres à 0</label>
+      </div>
+      <div class="scroll">${matrixHTML(resMetric)}</div>
+    </div>
+    <div class="panel" style="margin-top:18px;"><div class="panel-h">Synthèse par conseiller</div><div class="scroll"><table>
       <thead>
         <tr><th rowspan="2">Conseiller</th><th colspan="4">RDV</th><th colspan="4">Propositions</th><th colspan="4">Adhésions (BA)</th><th rowspan="2">Transfo</th></tr>
         <tr><th>Pris</th><th>Hon.</th><th>Non</th><th>%</th><th class="grp-os">Santé</th><th class="grp-prev">Prév</th><th class="grp-oa">Assoc</th><th>Tot</th><th class="grp-os">Santé</th><th class="grp-prev">Prév</th><th class="grp-oa">Assoc</th><th>Tot</th></tr>
       </thead>
-      <tbody>${rows||'<tr><td colspan="14" class="empty">Aucune donnée.</td></tr>'}</tbody>
+      <tbody>${synth||'<tr><td colspan="14" class="empty">Aucune donnée.</td></tr>'}</tbody>
       <tfoot>${row('Total équipe',T,null)}</tfoot>
     </table></div></div>
-    <p style="color:var(--faint);font-size:.78rem;margin-top:14px;">Santé = offres santé · Prév = prévoyance · Assoc = offres associées (PJ, épargne, PER, CAM…). BA = bonnes affaires (adhésions signées).</p>`;
+    <p style="color:var(--faint);font-size:.78rem;margin-top:14px;">Chaque ligne = une offre MGEN, chaque colonne = un conseiller. Sous-totaux par catégorie (Santé / Prévoyance / Associées). BA = bonnes affaires (adhésions signées).</p>`;
   document.querySelectorAll('[data-goto]').forEach(el=>el.onclick=()=>go(+el.dataset.goto));
+  document.querySelectorAll('.seg [data-metric]').forEach(b=>b.onclick=()=>{resMetric=b.dataset.metric;render();});
+  const hz=document.getElementById('hideZero');if(hz)hz.onchange=()=>{resHideZero=hz.checked;render();};
 }
 
 /* ===== PAGE CONSEILLER ===== */
