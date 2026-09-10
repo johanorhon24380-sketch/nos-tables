@@ -4,350 +4,150 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Suivi des Conseillers</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --violet:#5b2a86;--violet-dark:#46206a;--violet-light:#efe7f6;
-    --teal:#0e8f88;--teal-light:#e1f3f1;
-    --amber:#e0a81e;--red:#d25151;--green:#2f9e5e;
-    --bg:#f4f1f7;--card:#ffffff;--ink:#211b2b;--muted:#726a80;--border:#e6e0ee;
-    --shadow:0 2px 10px rgba(60,30,90,.06);--shadow-h:0 8px 28px rgba(60,30,90,.13);
-  }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;}
+  body{font-family:system-ui,Segoe UI,Roboto,sans-serif;background:#f4f1f7;color:#211b2b;padding:20px;}
+  .wrap{max-width:900px;margin:0 auto;}
+  h1{font-size:1.5rem;color:#5b2a86;margin-bottom:4px;}
+  .sub{color:#726a80;font-size:.9rem;margin-bottom:18px;}
 
-  header{background:linear-gradient(135deg,var(--violet),var(--violet-dark));color:#fff;padding:26px 20px 22px;}
-  .head-in{max-width:1040px;margin:0 auto;}
-  header h1{font-size:clamp(1.4rem,4vw,2.1rem);font-weight:800;letter-spacing:-.02em;}
-  header p{opacity:.8;font-size:.9rem;margin-top:3px;font-weight:400;}
+  .bar{margin-bottom:14px;}
+  .btn{background:#5b2a86;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:.9rem;font-weight:600;cursor:pointer;}
+  .btn:hover{background:#46206a;}
 
-  main{max-width:1040px;margin:0 auto;padding:22px 16px 80px;}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(60,30,90,.07);}
+  th,td{padding:11px 10px;text-align:center;border-bottom:1px solid #ece7f2;font-size:.9rem;}
+  th{background:#5b2a86;color:#fff;font-weight:600;font-size:.82rem;}
+  th:first-child,td:first-child{text-align:left;}
+  tr:last-child td{border-bottom:none;}
+  td input{width:60px;border:1px solid #ddd4ea;border-radius:6px;padding:6px;text-align:center;font-size:.95rem;font-family:inherit;outline:none;}
+  td input.name{width:100%;text-align:left;font-weight:600;}
+  td input:focus{border-color:#5b2a86;}
+  .rate{font-weight:700;color:#0e8f88;}
+  .stars{color:#e0a81e;font-size:1rem;letter-spacing:1px;white-space:nowrap;}
+  .stars .off{color:#dcd5e6;}
+  .del{background:transparent;border:none;color:#c9c1d6;cursor:pointer;font-size:1rem;}
+  .del:hover{color:#d25151;}
+  tfoot td{background:#efe7f6;font-weight:700;color:#5b2a86;}
 
-  /* toolbar */
-  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px;}
-  .month-nav{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:4px;box-shadow:var(--shadow);}
-  .month-nav button{border:none;background:transparent;font-size:1.1rem;line-height:1;width:34px;height:34px;border-radius:8px;cursor:pointer;color:var(--violet);font-weight:700;}
-  .month-nav button:hover{background:var(--violet-light);}
-  .month-nav .label{font-weight:600;min-width:130px;text-align:center;font-size:.95rem;text-transform:capitalize;}
-  .btn{border:none;border-radius:12px;padding:11px 16px;font-family:inherit;font-size:.9rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .18s;}
-  .btn-primary{background:var(--violet);color:#fff;box-shadow:0 3px 12px rgba(91,42,134,.3);}
-  .btn-primary:hover{background:var(--violet-dark);transform:translateY(-1px);}
-  .btn-ghost{background:var(--card);color:var(--violet);border:1px solid var(--border);box-shadow:var(--shadow);}
-  .btn-ghost:hover{background:var(--violet-light);}
-  .spacer{flex:1;}
-
-  /* team overview */
-  .overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:22px;}
-  .ov-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);}
-  .ov-card .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;}
-  .ov-card .val{font-size:1.7rem;font-weight:800;color:var(--violet);margin-top:4px;line-height:1;}
-  .ov-card .sub{font-size:.75rem;color:var(--muted);margin-top:3px;}
-
-  /* objectives */
-  .obj-box{background:var(--teal-light);border:1px solid #cfe9e6;border-radius:16px;padding:14px 16px;margin-bottom:22px;}
-  .obj-box h3{font-size:.85rem;color:var(--teal);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-  .obj-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
-  .obj-field label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:3px;font-weight:500;}
-  .obj-field input{width:100%;border:1px solid #bfe0dc;border-radius:9px;padding:8px 10px;font-family:inherit;font-size:.95rem;font-weight:600;color:var(--ink);background:#fff;outline:none;}
-  .obj-field input:focus{border-color:var(--teal);}
-
-  /* legend */
-  .legend{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 18px;margin-bottom:24px;box-shadow:var(--shadow);}
-  .legend h3{font-size:1rem;font-weight:700;margin-bottom:6px;}
-  .legend .intro{font-size:.86rem;color:var(--muted);margin-bottom:14px;line-height:1.5;}
-  .legend .intro code{background:var(--violet-light);color:var(--violet);padding:1px 6px;border-radius:5px;font-size:.82rem;font-weight:600;}
-  .lvl{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--border);}
-  .lvl .stars{color:var(--amber);font-size:1rem;letter-spacing:1px;white-space:nowrap;min-width:92px;}
-  .lvl .stars .off{color:#dcd5e6;}
-  .lvl .name{font-weight:700;min-width:105px;font-size:.9rem;}
-  .lvl .desc{font-size:.84rem;color:var(--muted);}
-  .lvl .pct{margin-left:auto;font-weight:700;font-size:.85rem;color:var(--ink);white-space:nowrap;}
-
-  /* conseiller cards */
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);overflow:hidden;transition:box-shadow .2s;}
-  .card:hover{box-shadow:var(--shadow-h);}
-  .card-head{display:flex;align-items:center;gap:12px;padding:16px 16px 12px;}
-  .avatar{width:44px;height:44px;border-radius:50%;background:var(--violet);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.05rem;flex-shrink:0;}
-  .card-head .who{flex:1;min-width:0;}
-  .card-head input.name{border:none;background:transparent;font-family:inherit;font-size:1.05rem;font-weight:700;color:var(--ink);width:100%;outline:none;padding:2px 0;border-bottom:1px dashed transparent;}
-  .card-head input.name:focus{border-bottom-color:var(--violet);}
-  .card-head .del{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:4px 6px;border-radius:8px;}
-  .card-head .del:hover{background:#fbeaea;color:var(--red);}
-
-  .rating{padding:0 16px 12px;}
-  .rating .big-stars{font-size:1.5rem;color:var(--amber);letter-spacing:2px;}
-  .rating .big-stars .off{color:#dcd5e6;}
-  .rating .rate-line{display:flex;align-items:baseline;gap:8px;margin-top:4px;}
-  .rating .score{font-weight:800;font-size:1rem;}
-  .rating .rate-label{font-size:.82rem;font-weight:600;padding:2px 9px;border-radius:50px;}
-
-  .metrics{padding:4px 16px 8px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .metric{background:var(--bg);border-radius:11px;padding:9px 11px;}
-  .metric label{display:block;font-size:.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;}
-  .metric input{width:100%;border:1px solid var(--border);border-radius:8px;padding:7px 9px;font-family:inherit;font-size:1.05rem;font-weight:700;color:var(--ink);background:#fff;outline:none;}
-  .metric input:focus{border-color:var(--violet);}
-  .metric .goal{font-size:.68rem;color:var(--muted);margin-top:3px;}
-
-  .kpis{display:flex;gap:8px;padding:8px 16px 18px;flex-wrap:wrap;}
-  .kpi{flex:1;min-width:120px;background:var(--violet-light);border-radius:11px;padding:9px 11px;text-align:center;}
-  .kpi .k-val{font-weight:800;font-size:1.15rem;color:var(--violet);}
-  .kpi .k-lbl{font-size:.72rem;color:var(--muted);margin-top:2px;}
-
-  .empty{text-align:center;padding:60px 20px;color:var(--muted);}
-  .empty .ico{font-size:2.4rem;margin-bottom:10px;}
-
-  .foot{text-align:center;color:var(--muted);font-size:.78rem;margin-top:30px;}
-  .foot span{color:var(--red);}
-  @media(max-width:480px){.metrics{grid-template-columns:1fr 1fr;}}
+  .legend{background:#fff;border-radius:12px;padding:14px 16px;margin-top:18px;box-shadow:0 2px 10px rgba(60,30,90,.07);}
+  .legend h3{font-size:.95rem;margin-bottom:8px;}
+  .legend p{font-size:.82rem;color:#726a80;margin-bottom:10px;}
+  .legend .row{display:flex;gap:10px;align-items:center;font-size:.85rem;padding:3px 0;}
+  .legend .row b{min-width:88px;}
+  .note{color:#726a80;font-size:.78rem;margin-top:14px;text-align:center;}
 </style>
 </head>
 <body>
-<header>
-  <div class="head-in">
-    <h1>Suivi des Conseillers</h1>
-    <p>Tableau de bord équipe — RDV · Propositions · Adhésions · Relances</p>
-  </div>
-</header>
+<div class="wrap">
+  <h1>Suivi des Conseillers</h1>
+  <p class="sub">Tableau de bord — RDV · Propositions · Adhésions · Relances</p>
 
-<main>
-  <div class="toolbar">
-    <div class="month-nav">
-      <button id="prevMonth" title="Mois précédent">‹</button>
-      <span class="label" id="monthLabel">—</span>
-      <button id="nextMonth" title="Mois suivant">›</button>
-    </div>
-    <button class="btn btn-primary" id="addBtn">+ Ajouter un conseiller</button>
-    <span class="spacer"></span>
-    <button class="btn btn-ghost" id="exportBtn">⬇ Exporter</button>
-    <button class="btn btn-ghost" id="importBtn">⬆ Importer</button>
-    <input type="file" id="fileInput" accept="application/json" hidden>
-  </div>
+  <div class="bar"><button class="btn" id="add">+ Ajouter un conseiller</button></div>
 
-  <div class="overview" id="overview"></div>
-
-  <div class="obj-box">
-    <h3>🎯 Objectifs du mois (par conseiller)</h3>
-    <div class="obj-grid">
-      <div class="obj-field"><label>RDV</label><input type="number" min="0" id="obj-rdv"></div>
-      <div class="obj-field"><label>Propositions</label><input type="number" min="0" id="obj-propos"></div>
-      <div class="obj-field"><label>Adhésions</label><input type="number" min="0" id="obj-adh"></div>
-      <div class="obj-field"><label>Relances</label><input type="number" min="0" id="obj-relance"></div>
-    </div>
-  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Conseiller</th><th>RDV</th><th>Propositions</th><th>Adhésions</th><th>Relances</th>
+        <th>Taux transfo.</th><th>Note</th><th></th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+    <tfoot>
+      <tr>
+        <td>Total équipe</td>
+        <td id="t-rdv">0</td><td id="t-propos">0</td><td id="t-adh">0</td><td id="t-relance">0</td>
+        <td id="t-taux">0%</td><td></td><td></td>
+      </tr>
+    </tfoot>
+  </table>
 
   <div class="legend">
-    <h3>⭐ Comment sont calculées les étoiles ?</h3>
-    <p class="intro">
-      Chaque conseiller reçoit un <strong>score d'atteinte des objectifs</strong>. Pour chaque indicateur on calcule
-      <code>réalisé ÷ objectif</code> (plafonné à 120&nbsp;%), puis on fait la <strong>moyenne des 4 indicateurs</strong>.
-      Ce score donne un nombre d'étoiles&nbsp;:
-    </p>
-    <div class="lvl"><span class="stars">★★★★★</span><span class="name">Excellent</span><span class="desc">Objectifs largement atteints ou dépassés sur l'ensemble.</span><span class="pct">≥ 95 %</span></div>
-    <div class="lvl"><span class="stars">★★★★<span class="off">★</span></span><span class="name">Très bien</span><span class="desc">Objectifs atteints, très bonne performance globale.</span><span class="pct">80 – 94 %</span></div>
-    <div class="lvl"><span class="stars">★★★<span class="off">★★</span></span><span class="name">Bien</span><span class="desc">Bon niveau, proche des objectifs.</span><span class="pct">60 – 79 %</span></div>
-    <div class="lvl"><span class="stars">★★<span class="off">★★★</span></span><span class="name">À améliorer</span><span class="desc">En dessous des objectifs, marge de progression.</span><span class="pct">40 – 59 %</span></div>
-    <div class="lvl"><span class="stars">★<span class="off">★★★★</span></span><span class="name">Vigilance</span><span class="desc">Objectifs peu atteints, accompagnement à prévoir.</span><span class="pct">&lt; 40 %</span></div>
+    <h3>⭐ Les étoiles</h3>
+    <p>Note basée sur le <b>taux de transformation</b> (adhésions ÷ propositions) : la capacité à conclure.</p>
+    <div class="row"><span class="stars">★★★★★</span><b>Excellent</b><span>≥ 60 %</span></div>
+    <div class="row"><span class="stars">★★★★<span class="off">★</span></span><b>Très bien</b><span>45 – 59 %</span></div>
+    <div class="row"><span class="stars">★★★<span class="off">★★</span></span><b>Bien</b><span>30 – 44 %</span></div>
+    <div class="row"><span class="stars">★★<span class="off">★★★</span></span><b>À améliorer</b><span>15 – 29 %</span></div>
+    <div class="row"><span class="stars">★<span class="off">★★★★</span></span><b>Vigilance</b><span>&lt; 15 %</span></div>
   </div>
 
-  <div class="grid" id="grid"></div>
-
-  <p class="foot">Les données sont enregistrées automatiquement dans ce navigateur. Pensez à <span>Exporter</span> pour sauvegarder ou partager.</p>
-</main>
+  <p class="note">Les données sont enregistrées automatiquement dans ce navigateur.</p>
+</div>
 
 <script>
 "use strict";
-const KEY='suiviConseillersMGEN_v1';
-const MONTHS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-const INDICATORS=[
-  {k:'rdv',label:'RDV'},
-  {k:'propos',label:'Propositions'},
-  {k:'adh',label:'Adhésions'},
-  {k:'relance',label:'Relances'}
-];
+const KEY='suiviConseillers_simple';
+let data=load();
 
-/* ---------- state ---------- */
-let state=load();
-let current=monthKey(new Date());
-
-function defaultState(){
-  return{
-    objectives:{rdv:40,propos:25,adh:15,relance:30},
-    conseillers:[
-      {id:id(),name:'Conseiller 1'},
-      {id:id(),name:'Conseiller 2'}
-    ],
-    data:{}
-  };
-}
 function load(){
-  try{const raw=localStorage.getItem(KEY);if(raw)return JSON.parse(raw);}catch(e){}
-  return defaultState();
+  try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);}catch(e){}
+  return[
+    {name:'Conseiller 1',rdv:0,propos:0,adh:0,relance:0},
+    {name:'Conseiller 2',rdv:0,propos:0,adh:0,relance:0}
+  ];
 }
-function save(){
-  try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}
-}
-function id(){return 'c'+Math.random().toString(36).slice(2,9);}
-function monthKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
-function monthLabel(key){const[y,m]=key.split('-');return MONTHS[+m-1]+' '+y;}
-
-/* values for a conseiller in current month */
-function vals(cid){
-  const md=state.data[current]||(state.data[current]={});
-  return md[cid]||(md[cid]={rdv:0,propos:0,adh:0,relance:0});
-}
-
-/* ---------- scoring ---------- */
-function score(v){
-  let sum=0,n=0;
-  INDICATORS.forEach(ind=>{
-    const obj=+state.objectives[ind.k]||0;
-    if(obj>0){sum+=Math.min((+v[ind.k]||0)/obj,1.2);n++;}
-  });
-  if(!n)return 0;
-  return (sum/n)*100;
-}
-function stars(pct){
-  if(pct>=95)return 5;
-  if(pct>=80)return 4;
-  if(pct>=60)return 3;
-  if(pct>=40)return 2;
-  return 1;
-}
-const LEVELS={5:{t:'Excellent',c:'var(--green)',bg:'#e4f4ea'},4:{t:'Très bien',c:'var(--teal)',bg:'var(--teal-light)'},3:{t:'Bien',c:'var(--violet)',bg:'var(--violet-light)'},2:{t:'À améliorer',c:'var(--amber)',bg:'#fbf1d6'},1:{t:'Vigilance',c:'var(--red)',bg:'#fbeaea'}};
-function starStr(n){let s='';for(let i=1;i<=5;i++)s+=i<=n?'★':'<span class="off">★</span>';return s;}
-function initials(name){return (name||'?').trim().split(/\s+/).map(w=>w[0]||'').slice(0,2).join('').toUpperCase()||'?';}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){}}
 function pct(a,b){return b>0?Math.round(a/b*100):0;}
+function stars(t){return t>=60?5:t>=45?4:t>=30?3:t>=15?2:1;}
+function starStr(n){let s='';for(let i=1;i<=5;i++)s+=i<=n?'★':'<span class="off">★</span>';return s;}
+function esc(s){return(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
-/* ---------- render ---------- */
 function render(){
-  document.getElementById('monthLabel').textContent=monthLabel(current);
-  INDICATORS.forEach(ind=>{document.getElementById('obj-'+ind.k).value=state.objectives[ind.k];});
-  renderOverview();
-  renderCards();
+  const tb=document.getElementById('rows');tb.innerHTML='';
+  let T={rdv:0,propos:0,adh:0,relance:0};
+  data.forEach((c,i)=>{
+    T.rdv+=+c.rdv;T.propos+=+c.propos;T.adh+=+c.adh;T.relance+=+c.relance;
+    const t=pct(c.adh,c.propos);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input class="name" value="${esc(c.name)}" data-i="${i}" data-f="name"></td>
+      <td><input type="number" min="0" value="${c.rdv}" data-i="${i}" data-f="rdv"></td>
+      <td><input type="number" min="0" value="${c.propos}" data-i="${i}" data-f="propos"></td>
+      <td><input type="number" min="0" value="${c.adh}" data-i="${i}" data-f="adh"></td>
+      <td><input type="number" min="0" value="${c.relance}" data-i="${i}" data-f="relance"></td>
+      <td class="rate">${t}%</td>
+      <td class="stars">${starStr(stars(t))}</td>
+      <td><button class="del" data-del="${i}" title="Supprimer">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('t-rdv').textContent=T.rdv;
+  document.getElementById('t-propos').textContent=T.propos;
+  document.getElementById('t-adh').textContent=T.adh;
+  document.getElementById('t-relance').textContent=T.relance;
+  document.getElementById('t-taux').textContent=pct(T.adh,T.propos)+'%';
   save();
 }
 
-function renderOverview(){
-  const el=document.getElementById('overview');
-  const tot={rdv:0,propos:0,adh:0,relance:0};
-  let scoreSum=0;
-  state.conseillers.forEach(c=>{const v=vals(c.id);INDICATORS.forEach(i=>tot[i.k]+=(+v[i.k]||0));scoreSum+=score(v);});
-  const n=state.conseillers.length;
-  const avg=n?Math.round(scoreSum/n):0;
-  const transfo=pct(tot.adh,tot.propos);
-  el.innerHTML=`
-    <div class="ov-card"><div class="lbl">Conseillers</div><div class="val">${n}</div></div>
-    <div class="ov-card"><div class="lbl">RDV</div><div class="val">${tot.rdv}</div></div>
-    <div class="ov-card"><div class="lbl">Propositions</div><div class="val">${tot.propos}</div></div>
-    <div class="ov-card"><div class="lbl">Adhésions</div><div class="val">${tot.adh}</div></div>
-    <div class="ov-card"><div class="lbl">Relances</div><div class="val">${tot.relance}</div></div>
-    <div class="ov-card"><div class="lbl">Taux transfo.</div><div class="val">${transfo}%</div><div class="sub">adhésions ÷ propositions</div></div>
-    <div class="ov-card"><div class="lbl">Score moyen</div><div class="val">${avg}%</div><div class="sub">équipe</div></div>`;
+document.getElementById('rows').addEventListener('input',e=>{
+  const t=e.target,i=t.dataset.i,f=t.dataset.f;if(i==null)return;
+  data[i][f]=f==='name'?t.value:Math.max(0,+t.value||0);
+  if(f==='name'){save();return;}
+  // update the row's rate + stars + totals without losing focus
+  render_focus_safe(t);
+});
+function render_focus_safe(input){
+  const i=input.dataset.i,c=data[i],t=pct(c.adh,c.propos);
+  const tr=input.closest('tr');
+  tr.querySelector('.rate').textContent=t+'%';
+  tr.querySelector('.stars').innerHTML=starStr(stars(t));
+  let T={rdv:0,propos:0,adh:0,relance:0};
+  data.forEach(c=>{T.rdv+=+c.rdv;T.propos+=+c.propos;T.adh+=+c.adh;T.relance+=+c.relance;});
+  document.getElementById('t-rdv').textContent=T.rdv;
+  document.getElementById('t-propos').textContent=T.propos;
+  document.getElementById('t-adh').textContent=T.adh;
+  document.getElementById('t-relance').textContent=T.relance;
+  document.getElementById('t-taux').textContent=pct(T.adh,T.propos)+'%';
+  save();
 }
-
-function renderCards(){
-  const grid=document.getElementById('grid');
-  if(!state.conseillers.length){
-    grid.innerHTML=`<div class="empty"><div class="ico">👥</div>Aucun conseiller pour l'instant.<br>Cliquez sur « Ajouter un conseiller ».</div>`;
-    return;
-  }
-  grid.innerHTML='';
-  state.conseillers.forEach(c=>{
-    const v=vals(c.id);
-    const sc=score(v),st=stars(sc),lv=LEVELS[st];
-    const card=document.createElement('div');card.className='card';
-    card.innerHTML=`
-      <div class="card-head">
-        <div class="avatar">${initials(c.name)}</div>
-        <div class="who"><input class="name" value="${escapeHtml(c.name)}" data-id="${c.id}" data-f="name"></div>
-        <button class="del" title="Supprimer" data-del="${c.id}">✕</button>
-      </div>
-      <div class="rating">
-        <div class="big-stars">${starStr(st)}</div>
-        <div class="rate-line">
-          <span class="score">${Math.round(sc)}%</span>
-          <span class="rate-label" style="color:${lv.c};background:${lv.bg}">${lv.t}</span>
-        </div>
-      </div>
-      <div class="metrics">
-        ${INDICATORS.map(ind=>`
-          <div class="metric">
-            <label>${ind.label}</label>
-            <input type="number" min="0" value="${+v[ind.k]||0}" data-id="${c.id}" data-f="${ind.k}">
-            <div class="goal">Objectif : ${state.objectives[ind.k]}</div>
-          </div>`).join('')}
-      </div>
-      <div class="kpis">
-        <div class="kpi"><div class="k-val">${pct(v.propos,v.rdv)}%</div><div class="k-lbl">Taux de proposition<br>(propos ÷ RDV)</div></div>
-        <div class="kpi"><div class="k-val">${pct(v.adh,v.propos)}%</div><div class="k-lbl">Taux de transformation<br>(adhésions ÷ propos)</div></div>
-      </div>`;
-    grid.appendChild(card);
-  });
-}
-
-function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-
-/* ---------- events ---------- */
-document.getElementById('grid').addEventListener('input',e=>{
-  const t=e.target,cid=t.dataset.id,f=t.dataset.f;
-  if(!cid)return;
-  if(f==='name'){
-    const c=state.conseillers.find(x=>x.id===cid);if(c)c.name=t.value;
-    const av=t.closest('.card-head').querySelector('.avatar');if(av)av.textContent=initials(t.value);
-    save();renderOverview();
-  }else{
-    vals(cid)[f]=Math.max(0,+t.value||0);
-    save();renderOverview();
-    // update this card's derived values without losing focus
-    const card=t.closest('.card'),v=vals(cid),sc=score(v),st=stars(sc),lv=LEVELS[st];
-    card.querySelector('.big-stars').innerHTML=starStr(st);
-    card.querySelector('.score').textContent=Math.round(sc)+'%';
-    const rl=card.querySelector('.rate-label');rl.textContent=lv.t;rl.style.color=lv.c;rl.style.background=lv.bg;
-    const kv=card.querySelectorAll('.kpi .k-val');
-    kv[0].textContent=pct(v.propos,v.rdv)+'%';
-    kv[1].textContent=pct(v.adh,v.propos)+'%';
-  }
+document.getElementById('rows').addEventListener('click',e=>{
+  const d=e.target.dataset.del;if(d==null)return;
+  if(confirm('Supprimer '+(data[d].name||'ce conseiller')+' ?')){data.splice(d,1);render();}
 });
-document.getElementById('grid').addEventListener('click',e=>{
-  const del=e.target.dataset.del;
-  if(del){
-    const c=state.conseillers.find(x=>x.id===del);
-    if(confirm('Supprimer '+(c?c.name:'ce conseiller')+' ? (ses données de tous les mois seront effacées)')){
-      state.conseillers=state.conseillers.filter(x=>x.id!==del);
-      Object.values(state.data).forEach(md=>delete md[del]);
-      render();
-    }
-  }
-});
-document.getElementById('addBtn').addEventListener('click',()=>{
-  state.conseillers.push({id:id(),name:'Nouveau conseiller'});
-  render();
-  const inputs=document.querySelectorAll('.card-head input.name');
-  const last=inputs[inputs.length-1];if(last){last.focus();last.select();}
-});
-document.querySelectorAll('.obj-grid input').forEach(inp=>{
-  inp.addEventListener('input',()=>{
-    const k=inp.id.replace('obj-','');
-    state.objectives[k]=Math.max(0,+inp.value||0);
-    render();
-  });
-});
-document.getElementById('prevMonth').addEventListener('click',()=>shiftMonth(-1));
-document.getElementById('nextMonth').addEventListener('click',()=>shiftMonth(1));
-function shiftMonth(d){const[y,m]=current.split('-').map(Number);const dt=new Date(y,m-1+d,1);current=monthKey(dt);render();}
-
-document.getElementById('exportBtn').addEventListener('click',()=>{
-  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='suivi-conseillers.json';a.click();URL.revokeObjectURL(a.href);
-});
-document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('fileInput').click());
-document.getElementById('fileInput').addEventListener('change',e=>{
-  const file=e.target.files[0];if(!file)return;
-  const r=new FileReader();
-  r.onload=()=>{try{const d=JSON.parse(r.result);if(d&&d.conseillers&&d.objectives){state=d;state.data=state.data||{};render();}else alert('Fichier invalide.');}catch(err){alert('Fichier illisible.');}};
-  r.readAsText(file);e.target.value='';
+document.getElementById('add').addEventListener('click',()=>{
+  data.push({name:'Nouveau conseiller',rdv:0,propos:0,adh:0,relance:0});render();
+  const inputs=document.querySelectorAll('.name');const last=inputs[inputs.length-1];
+  if(last){last.focus();last.select();}
 });
 
 render();
