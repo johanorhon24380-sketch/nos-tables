@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Suivi des Conseillers</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
   :root{
@@ -248,6 +250,18 @@
 <script>
 "use strict";
 const KEY='suiviConseillers_v4';
+
+/* ===================== CONFIG FIREBASE =====================
+   Colle ici la configuration de TON projet Firebase (Realtime Database).
+   Tant que databaseURL n'est pas rempli, l'appli fonctionne en local (ce poste). */
+const FIREBASE_CONFIG = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",   // ex: https://suivi-conseillers-xxxx-default-rtdb.europe-west1.firebasedatabase.app
+  projectId: "",
+  appId: ""
+};
+/* ========================================================== */
 const ORIGINES=['Actions extérieures','Actions locales','Affaires CRM','Appel PSC','Appel entrant autre','Atelier','Campagne','Campagne reversement','Passeur','Rebond Accueil','Receveur','Recommandation','Relance tel perso','WEB service'];
 const SUITES=['RDV Face à face','RDV Téléphonique','RDV Visio','Adhésion directe'];
 const CATS=[{k:'os',label:'Santé'},{k:'prev',label:'Prévoyance'},{k:'oa',label:'Offres additionnelles'}];
@@ -264,7 +278,7 @@ const OFFERS_ADHES={
 function catOf(o,set){for(const k of['os','prev','oa'])if(set[k].includes(o))return k;return 'oa';}
 
 let state=load(),route='dash',period='all',resMetric='adhes',resHideZero=false,consSearch='';
-let db=null,pendingRerender=false;const writeTimers={};
+let fdb=null,pendingRerender=false;const writeTimers={};
 normalizeIds();
 
 function normalizeIds(){state.conseillers.forEach((c,k)=>{if(!c.id)c.id='c'+(k+1)+'x'+Math.random().toString(36).slice(2,6);if(c.order==null)c.order=k;});}
@@ -272,8 +286,8 @@ function load(){try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);
 function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 function save(){saveLocal();}
 function conDoc(c){return{name:c.name,order:c.order||0,contacts:(c.contacts||[]).map(({_open,...r})=>r),updatedAt:Date.now()};}
-function persist(c,now){saveLocal();if(!db||!c)return;clearTimeout(writeTimers[c.id]);
-  const w=()=>{try{db.doc('conseillers/'+c.id).set(conDoc(c)).catch(()=>{});}catch(e){}};
+function persist(c,now){saveLocal();if(!fdb||!c)return;clearTimeout(writeTimers[c.id]);
+  const w=()=>{try{fdb.ref('conseillers/'+c.id).set(conDoc(c)).catch(()=>{});}catch(e){}};
   if(now)w();else writeTimers[c.id]=setTimeout(w,500);}
 function conById(id){return state.conseillers.find(c=>c.id===id);}
 
@@ -524,7 +538,7 @@ function renderConseiller(c){
     <div id="contacts">${list.length?list.map(o=>contactCard(o.x,c.id,o.j)).join(''):'<div class="panel empty">Aucun contact sur cette période. Cliquez sur « + Ajouter un contact ».</div>'}</div>
     <div id="noneMsg" class="panel empty" hidden>Aucun adhérent ne correspond à votre recherche.</div>`;
   document.getElementById('renameC').onclick=async()=>{const n=await modalText('Renommer le conseiller','Nouveau nom :',c.name,'Renommer');if(n&&n.trim()){c.name=n.trim();persist(c,true);renderNav();render();}};
-  document.getElementById('delC').onclick=async()=>{const ok=await modalConfirm('Supprimer '+c.name+' ?','Toutes ses saisies seront définitivement supprimées.','Supprimer',true);if(ok){const id=c.id;state.conseillers=state.conseillers.filter(x=>x.id!==id);saveLocal();if(db){try{db.doc('conseillers/'+id).delete().catch(()=>{});}catch(e){}}go('dash');}};
+  document.getElementById('delC').onclick=async()=>{const ok=await modalConfirm('Supprimer '+c.name+' ?','Toutes ses saisies seront définitivement supprimées.','Supprimer',true);if(ok){const id=c.id;state.conseillers=state.conseillers.filter(x=>x.id!==id);saveLocal();if(fdb){try{fdb.ref('conseillers/'+id).remove().catch(()=>{});}catch(e){}}go('dash');}};
   document.getElementById('addContact').onclick=()=>{consSearch='';c.contacts.push(newContact());persist(c,true);renderConseiller(c);};
   const sb=document.getElementById('consSearch');
   if(sb){sb.oninput=()=>{consSearch=sb.value;applyConsFilter(c);};}
@@ -571,14 +585,16 @@ document.getElementById('sidebar').addEventListener('click',async e=>{const it=e
     const c={id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:n.trim(),order:state.conseillers.length,contacts:[]};
     state.conseillers.push(c);persist(c,true);go(c.id);}}});
 
-/* ===== synchronisation base partagée ===== */
+/* ===== synchronisation Firebase (base partagée) ===== */
 function setSyncBadge(shared){const f=document.querySelector('.side-foot');if(!f)return;
-  f.innerHTML=shared?'🟢 <b style="color:var(--accent-ink)">Partagé</b> — données synchronisées pour toute l\'agence.'
-    :'💾 <b>Local</b> — données sur ce poste. Ouvrez le lien partagé pour la version agence.';}
-function onDbSnap(snap){
-  if(snap.empty)return; // base vide (pas encore initialisée) : on garde l'état local
-  const arr=[];
-  snap.docs.forEach(d=>{const v=d.data()||{};arr.push({id:d.id,name:v.name||d.id,order:(v.order!=null?v.order:0),contacts:Array.isArray(v.contacts)?v.contacts:[]});});
+  f.innerHTML=shared?'🟢 <b style="color:var(--accent-ink)">Partagé</b> — données synchronisées pour toute l\'agence, sauvegarde permanente.'
+    :'💾 <b>Local</b> — données sur ce poste uniquement.';}
+function fbConfigured(){return FIREBASE_CONFIG&&FIREBASE_CONFIG.databaseURL&&FIREBASE_CONFIG.databaseURL.indexOf('http')===0;}
+function onFbSnap(val){
+  const obj=val||{};
+  const arr=Object.keys(obj).map(id=>{const v=obj[id]||{};
+    return{id,name:v.name||id,order:(v.order!=null?v.order:0),contacts:Array.isArray(v.contacts)?v.contacts:[]};});
+  if(!arr.length)return; // base vide : garder l'état local en attendant l'amorçage
   arr.sort((a,b)=>(a.order-b.order)||String(a.name).localeCompare(String(b.name)));
   state.conseillers=arr;saveLocal();
   const cont=document.getElementById('contacts');
@@ -586,17 +602,29 @@ function onDbSnap(snap){
   if(editing){pendingRerender=true;renderNav();return;}
   renderNav();render();
 }
-async function connectDb(){
-  if(!(window.claude&&claude.use)){setSyncBadge(false);return;}
-  try{db=await claude.use('db');}catch(e){db=null;}
-  if(!db){setSyncBadge(false);return;}
-  setSyncBadge(true);
-  try{db.collection('conseillers').onSnapshot(onDbSnap,()=>{});}catch(e){}
+function seedRoster(){
+  const roster=['Judicaël','Stéphane','Johan','Justine','Conseiller 5'];
+  fdb.ref('meta/initialized').once('value').then(s=>{
+    if(s.val())return;
+    const batch={};roster.forEach((n,k)=>{batch['conseillers/c'+(k+1)]={name:n,order:k,contacts:[]};});
+    batch['meta/initialized']=true;
+    fdb.ref().update(batch).catch(()=>{});
+  }).catch(()=>{});
+}
+function connectFirebase(){
+  if(!fbConfigured()||typeof firebase==='undefined'){setSyncBadge(false);return;}
+  try{
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fdb=firebase.database();
+    setSyncBadge(true);
+    seedRoster();
+    fdb.ref('conseillers').on('value',s=>onFbSnap(s.val()),()=>setSyncBadge(false));
+  }catch(e){fdb=null;setSyncBadge(false);}
 }
 document.addEventListener('focusout',()=>{if(!pendingRerender)return;pendingRerender=false;
   setTimeout(()=>{const cont=document.getElementById('contacts');if(!(cont&&document.activeElement&&cont.contains(document.activeElement))){renderNav();render();}},200);});
 
-renderNav();render();connectDb();
+renderNav();render();connectFirebase();
 </script>
 </body>
 </html>
