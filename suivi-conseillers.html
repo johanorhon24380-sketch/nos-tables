@@ -148,21 +148,36 @@
   .toolbar{display:flex;gap:10px;margin:20px 0 16px;flex-wrap:wrap;}
   .btn{background:linear-gradient(145deg,var(--accent),#067a3a);color:#fff;border:none;border-radius:12px;padding:12px 20px;font-size:.9rem;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(10,166,79,.28);transition:.15s;}
   .btn:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(10,166,79,.36);}
-  .contact{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh);padding:18px;margin-bottom:14px;position:relative;transition:.15s;}
-  .contact:hover{border-color:#cdd7e3;}
-  .status{position:absolute;top:16px;right:16px;font-size:.68rem;font-weight:700;padding:4px 11px;border-radius:50px;letter-spacing:.03em;}
-  .status.ok{background:var(--os-b);color:var(--os);} .status.no{background:rgba(220,38,38,.12);color:var(--danger);}
-  .frow{display:grid;grid-template-columns:1.5fr 1fr 1.2fr 1.1fr 1fr .8fr auto;gap:12px;align-items:end;padding-right:96px;}
+  .contact{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh);margin-bottom:16px;overflow:hidden;transition:.15s;}
+  .contact:hover{border-color:#cdd7e3;box-shadow:0 2px 6px rgba(16,30,55,.05),0 16px 36px rgba(16,30,55,.09);}
+  .chead{display:flex;align-items:center;gap:14px;padding:15px 18px;border-bottom:1px solid var(--line-2);background:var(--fill-2);flex-wrap:wrap;}
+  .cavatar{width:46px;height:46px;border-radius:13px;background:var(--accent-dim);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:800;font-size:1rem;flex-shrink:0;}
+  .cwho{flex:1;min-width:150px;display:flex;flex-direction:column;gap:1px;}
+  .cname{border:1px solid transparent;background:transparent;font-family:var(--disp);font-weight:700;font-size:1.05rem;color:var(--text);outline:none;padding:3px 6px;border-radius:8px;width:100%;transition:.12s;}
+  .cname:hover{background:var(--fill);} .cname:focus{background:#fff;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);}
+  .cname::placeholder{color:var(--faint);font-weight:600;}
+  .cnum{border:1px solid transparent;background:transparent;font-family:var(--mono);font-size:.8rem;color:var(--muted);outline:none;padding:2px 6px;border-radius:7px;width:100%;transition:.12s;}
+  .cnum:hover{background:var(--fill);} .cnum:focus{background:#fff;border-color:var(--accent);}
+  .cnum::placeholder{color:var(--faint);}
+  .toggle{display:inline-flex;background:var(--fill);border:1px solid var(--line);border-radius:11px;padding:3px;gap:3px;flex-shrink:0;}
+  .toggle .tg{border:none;background:transparent;color:var(--muted);font-size:.78rem;font-weight:700;padding:8px 13px;border-radius:8px;cursor:pointer;transition:.15s;white-space:nowrap;}
+  .toggle .tg.on.ok{background:var(--os);color:#fff;box-shadow:0 2px 8px rgba(15,157,99,.35);}
+  .toggle .tg.on.no{background:var(--danger);color:#fff;box-shadow:0 2px 8px rgba(220,38,38,.3);}
+  .cbody{padding:16px 18px 18px;}
+  .cmeta{display:grid;grid-template-columns:1.3fr 1.3fr 1fr;gap:13px;margin-bottom:14px;}
   .field{display:flex;flex-direction:column;gap:5px;min-width:0;}
   .field label{font-size:.64rem;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700;}
   .field input,.field select{width:100%;}
   .field input::placeholder{color:var(--faint);}
-  .del{background:var(--fill);border:1px solid var(--line);border-radius:11px;color:var(--faint);cursor:pointer;font-size:.9rem;height:40px;width:40px;flex-shrink:0;transition:.15s;}
-  .del:hover{color:var(--danger);border-color:rgba(220,38,38,.4);}
+  .del{background:var(--fill);border:1px solid var(--line);border-radius:11px;color:var(--faint);cursor:pointer;font-size:.95rem;height:40px;width:40px;flex-shrink:0;transition:.15s;}
+  .del:hover{color:var(--danger);border-color:rgba(220,38,38,.4);background:rgba(220,38,38,.06);}
 
-  .offers{margin-top:15px;padding-top:14px;border-top:1px solid var(--line-2);}
-  .oline{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
-  .otag{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;min-width:100px;color:var(--muted);}
+  .ogroup{background:var(--elev);border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:11px;}
+  .ogroup.res{background:linear-gradient(150deg,var(--accent-dim),transparent 70%);border-color:rgba(10,166,79,.25);}
+  .ohead{display:flex;align-items:center;gap:9px;margin-bottom:11px;}
+  .otitle{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);}
+  .ocount{font-family:var(--mono);font-size:.72rem;font-weight:700;color:var(--accent-ink);background:#fff;border:1px solid var(--line);border-radius:50px;padding:1px 9px;min-width:24px;text-align:center;}
+  .oline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .chip{display:inline-flex;align-items:center;gap:7px;border-radius:50px;padding:6px 12px;font-size:.79rem;font-weight:600;border:1px solid transparent;}
   .chip .x{cursor:pointer;opacity:.55;font-weight:700;}
   .chip .x:hover{opacity:1;}
@@ -191,8 +206,9 @@
     .topbar{display:flex;}
     .content{padding:18px 15px 70px;}
     .backdrop.show{display:block;}
-    .frow{grid-template-columns:1fr 1fr;padding-right:0;}
-    .status{position:static;display:inline-block;margin-bottom:10px;}
+    .cmeta{grid-template-columns:1fr;}
+    .chead{gap:10px;}
+    .cwho{order:2;flex-basis:100%;}
   }
 </style>
 </head>
@@ -403,31 +419,40 @@ function offerPanel(kind,ci,j){const set=kind==='propos'?OFFERS_PROPOS:OFFERS_AD
   return `<div class="offer-panel" data-panel="${kind}-${j}" hidden>${CATS.map(c=>`
     <div class="offer-grp ${c.k}"><div class="gh">${c.label}</div>
     ${set[c.k].map(o=>`<span class="obtn" data-add="${kind}" data-j="${j}" data-o="${esc(o)}">+ ${esc(o)}</span>`).join('')}</div>`).join('')}</div>`;}
-function offersBlock(x,kind,ci,j){const arr=kind==='propos'?x.propos:x.adhes;const tag=kind==='propos'?'Propositions':'Adhésions';
-  return `<div class="offers"><div class="oline"><span class="otag">${tag}</span>
-    ${arr.map(o=>chip(o,kind,ci,j)).join('')}
-    ${arr.length<5?`<span class="addoffer" data-toggle="${kind}-${j}">+ offre</span>`:'<span class="cap">(5 max)</span>'}
+function offersBlock(x,kind,ci,j){const arr=kind==='propos'?x.propos:x.adhes;const title=kind==='propos'?'Propositions':'Adhésions';
+  return `<div class="ogroup ${kind==='adhes'?'res':''}">
+    <div class="ohead"><span class="otitle">${title}</span><span class="ocount">${arr.length}</span></div>
+    <div class="oline">${arr.map(o=>chip(o,kind,ci,j)).join('')}
+    ${arr.length<5?`<span class="addoffer" data-toggle="${kind}-${j}">+ ajouter</span>`:'<span class="cap">5 max</span>'}
     </div>${offerPanel(kind,ci,j)}</div>`;}
 function contactCard(x,ci,j){return `<div class="contact" data-card="${j}">
-    <span class="status ${x.honore==='NON'?'no':'ok'}">${x.honore==='NON'?'RDV non honoré':'RDV honoré'}</span>
-    <div class="frow">
-      <div class="field"><label>Nom + prénom adhérent</label><input value="${esc(x.nom)}" data-f="nom" data-j="${j}" placeholder="Nom Prénom"></div>
-      <div class="field"><label>N° adhérent</label><input value="${esc(x.numero)}" data-f="numero" data-j="${j}" placeholder="N°"></div>
-      <div class="field"><label>Origine du contact</label><select data-f="origine" data-j="${j}"><option value="">—</option>${ORIGINES.map(o=>`<option ${o===x.origine?'selected':''}>${o}</option>`).join('')}</select></div>
-      <div class="field"><label>Suite donnée</label><select data-f="suite" data-j="${j}"><option value="">—</option>${SUITES.map(o=>`<option ${o===x.suite?'selected':''}>${o}</option>`).join('')}</select></div>
-      <div class="field"><label>Date</label><input type="date" value="${esc(x.date)}" data-f="date" data-j="${j}"></div>
-      <div class="field"><label>Honoré</label><select data-f="honore" data-j="${j}"><option ${x.honore==='OUI'?'selected':''}>OUI</option><option ${x.honore==='NON'?'selected':''}>NON</option></select></div>
-      <button class="del" data-del="${j}" title="Supprimer">✕</button>
+    <div class="chead">
+      <div class="cavatar">${x.nom?initials(x.nom):'—'}</div>
+      <div class="cwho">
+        <input class="cname" value="${esc(x.nom)}" data-f="nom" data-j="${j}" placeholder="Nom + prénom de l'adhérent">
+        <input class="cnum" value="${esc(x.numero)}" data-f="numero" data-j="${j}" placeholder="N° adhérent">
+      </div>
+      <div class="toggle">
+        <button class="tg ${x.honore!=='NON'?'on ok':''}" data-hon="OUI" data-j="${j}">✓ Honoré</button>
+        <button class="tg ${x.honore==='NON'?'on no':''}" data-hon="NON" data-j="${j}">✕ Non honoré</button>
+      </div>
+      <button class="del" data-del="${j}" title="Supprimer">🗑</button>
     </div>
-    ${offersBlock(x,'propos',ci,j)}${offersBlock(x,'adhes',ci,j)}
-    <div class="details-toggle" data-details="${j}">${x._open?'▾ Masquer les détails':'▸ RECO, relance, commentaire…'}</div>
+    <div class="cbody">
+      <div class="cmeta">
+        <div class="field"><label>Origine du contact</label><select data-f="origine" data-j="${j}"><option value="">—</option>${ORIGINES.map(o=>`<option ${o===x.origine?'selected':''}>${o}</option>`).join('')}</select></div>
+        <div class="field"><label>Type de RDV / suite</label><select data-f="suite" data-j="${j}"><option value="">—</option>${SUITES.map(o=>`<option ${o===x.suite?'selected':''}>${o}</option>`).join('')}</select></div>
+        <div class="field"><label>Date</label><input type="date" value="${esc(x.date)}" data-f="date" data-j="${j}"></div>
+      </div>
+      ${offersBlock(x,'propos',ci,j)}${offersBlock(x,'adhes',ci,j)}
+      <div class="details-toggle" data-details="${j}">${x._open?'▾ Masquer les détails':'▸ RECO, relance, commentaire…'}</div>
     ${x._open?`<div class="details-box">
       <div class="field"><label>RECO</label><input value="${esc(x.reco)}" data-f="reco" data-j="${j}"></div>
       <div class="field"><label>Date de RDV 2</label><input type="date" value="${esc(x.dateRdv2)}" data-f="dateRdv2" data-j="${j}"></div>
       <div class="field"><label>Date de relance</label><input type="date" value="${esc(x.dateRelance)}" data-f="dateRelance" data-j="${j}"></div>
       <div class="field"><label>Date signature (2 temps)</label><input type="date" value="${esc(x.dateSignature)}" data-f="dateSignature" data-j="${j}"></div>
       <div class="field" style="grid-column:1/-1;"><label>Commentaires</label><input value="${esc(x.commentaire)}" data-f="commentaire" data-j="${j}"></div>
-    </div>`:''}</div>`;}
+    </div>`:''}</div></div>`;}
 function renderConseiller(i){
   const c=state.conseillers[i],s=stats(c);
   const list=c.contacts.map((x,j)=>({x,j})).filter(o=>inPeriod(o.x)).reverse();
@@ -470,11 +495,13 @@ function refreshTiles(i){const s=stats(state.conseillers[i]);const nums=document
   if(nums.length>=3){nums[0].textContent=s.rdv;nums[1].textContent=s.propos.total;nums[2].textContent=s.ba.total;}}
 function bindContacts(i){
   const c=state.conseillers[i],box=document.getElementById('contacts');
-  box.addEventListener('input',e=>{const f=e.target.dataset.f;if(!f)return;c.contacts[+e.target.dataset.j][f]=e.target.value;save();});
+  box.addEventListener('input',e=>{const f=e.target.dataset.f;if(!f)return;const j=+e.target.dataset.j;c.contacts[j][f]=e.target.value;save();
+    if(f==='nom'){const av=e.target.closest('.contact').querySelector('.cavatar');if(av)av.textContent=e.target.value?initials(e.target.value):'—';}});
   box.addEventListener('change',e=>{const f=e.target.dataset.f;if(!f)return;const j=+e.target.dataset.j;c.contacts[j][f]=e.target.value;save();
-    if(f==='honore'){const st=e.target.closest('.contact').querySelector('.status');st.className='status '+(e.target.value==='NON'?'no':'ok');st.textContent=e.target.value==='NON'?'RDV non honoré':'RDV honoré';refreshTiles(i);}
     if(f==='date')refreshTiles(i);});
-  box.addEventListener('click',e=>{const t=e.target;
+  box.addEventListener('click',e=>{const t=e.target.closest('[data-hon],[data-del],[data-details],[data-toggle],[data-add],[data-rm]')||e.target;
+    if(t.dataset.hon){const j=+t.dataset.j;c.contacts[j].honore=t.dataset.hon;save();
+      t.parentElement.querySelectorAll('.tg').forEach(b=>{b.classList.remove('on','ok','no');if(b.dataset.hon===t.dataset.hon)b.classList.add('on',t.dataset.hon==='NON'?'no':'ok');});refreshTiles(i);return;}
     if(t.dataset.del!=null){c.contacts.splice(+t.dataset.del,1);save();renderConseiller(i);return;}
     if(t.dataset.details!=null){const j=+t.dataset.details;c.contacts[j]._open=!c.contacts[j]._open;save();renderConseiller(i);return;}
     if(t.dataset.toggle){const p=box.querySelector(`[data-panel="${t.dataset.toggle}"]`);if(p)p.hidden=!p.hidden;return;}
