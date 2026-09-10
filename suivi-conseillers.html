@@ -214,16 +214,16 @@
 const KEY='suiviConseillers_v4';
 const ORIGINES=['Actions extérieures','Actions locales','Affaires CRM','Appel PSC','Appel entrant autre','Atelier','Campagne','Campagne reversement','Passeur','Rebond Accueil','Receveur','Recommandation','Relance tel perso','WEB service'];
 const SUITES=['RDV Face à face','RDV Téléphonique','RDV Visio','Adhésion directe'];
-const CATS=[{k:'os',label:'Santé'},{k:'prev',label:'Prévoyance'},{k:'oa',label:'Offres associées'}];
+const CATS=[{k:'os',label:'Santé'},{k:'prev',label:'Prévoyance'},{k:'oa',label:'Offres additionnelles'}];
 const OFFERS_PROPOS={
   os:['MSP','OJI','Efficience','Efficience FPH','MSPH','Santé CO'],
-  prev:['Prev CO','Prev indiv','Mutex DC'],
-  oa:['PJ','Epargne vie','PER en points','PER multi','CAM','Neobsia','Ass emp','santé animal','Reversement EV','Reversement RET']
+  prev:['Sérénité (indiv.)','Confort (indiv.)','Socle (coll.)','Socle + Option (coll.)'],
+  oa:['Mutex DC','PJ','Epargne vie','PER en points','PER multi','CAM','Neobsia','Ass emp','santé animal','Reversement EV','Reversement RET']
 };
 const OFFERS_ADHES={
   os:['MSP','OJI','Efficience','Efficience FPH','MSPH','Santé CO'],
-  prev:['Prev CO maintien','Prev CO conquête','Prev INDIV maintien','Prev INDIV conquête','Mutex DC'],
-  oa:['PJ','Epargne vie','EV versement OK','PER pts','PER pts versement OK','PER multi','PER multi versement OK','CAM','Neobsia','Ass emp','Ass emp SUBSTIT','santé animal','Reversement EV','Reversement RET']
+  prev:['Sérénité (indiv.)','Confort (indiv.)','Socle (coll.)','Socle + Option (coll.)'],
+  oa:['Mutex DC','PJ','Epargne vie','EV versement OK','PER pts','PER pts versement OK','PER multi','PER multi versement OK','CAM','Neobsia','Ass emp','Ass emp SUBSTIT','santé animal','Reversement EV','Reversement RET']
 };
 function catOf(o,set){for(const k of['os','prev','oa'])if(set[k].includes(o))return k;return 'oa';}
 
@@ -245,11 +245,11 @@ function demoState(){return{conseillers:[
     ex({nom:'Faure Thomas',numero:'0105123998',origine:'Receveur',suite:'RDV Face à face',date:'2026-09-09',honore:'OUI',propos:['MSP','PJ','Epargne vie'],adhes:['MSP']})]},
   {name:'Stéphane',contacts:[
     ex({nom:'Durand Sophie',numero:'0103447712',origine:'Receveur',suite:'RDV Face à face',date:'2026-09-03',honore:'OUI',propos:['MSP','PJ'],adhes:['MSP']}),
-    ex({nom:'Petit Luc',numero:'0102889654',origine:'Passeur',suite:'RDV Face à face',date:'2026-09-04',honore:'OUI',propos:['Efficience','Prev CO'],adhes:['Efficience']}),
+    ex({nom:'Petit Luc',numero:'0102889654',origine:'Passeur',suite:'RDV Face à face',date:'2026-09-04',honore:'OUI',propos:['Efficience','Socle (coll.)'],adhes:['Efficience']}),
     ex({nom:'Girard Emma',numero:'0106552310',origine:'Recommandation',suite:'RDV Téléphonique',date:'2026-09-08',honore:'NON'})]},
   {name:'Johan',contacts:[
     ex({nom:'Descoubes Marielle',numero:'0101465524',origine:'Appel entrant autre',suite:'RDV Face à face',date:'2026-09-01',honore:'OUI',propos:['Santé CO'],adhes:['Santé CO']}),
-    ex({nom:'Vanwambeke Jolan',numero:'0106295583',origine:'Campagne',suite:'RDV Visio',date:'2026-09-02',honore:'OUI',propos:['Prev indiv','PJ','PER en points','Epargne vie'],adhes:['Prev INDIV conquête','PJ']}),
+    ex({nom:'Vanwambeke Jolan',numero:'0106295583',origine:'Campagne',suite:'RDV Visio',date:'2026-09-02',honore:'OUI',propos:['Sérénité (indiv.)','PJ','PER en points','Epargne vie'],adhes:['Sérénité (indiv.)','PJ']}),
     ex({nom:'Martin Paul',numero:'0102223344',origine:'Recommandation',suite:'RDV Téléphonique',date:'2026-09-05',honore:'NON'})]},
   {name:'Justine',contacts:[
     ex({nom:'Robert Marc',numero:'0107784412',origine:'WEB service',suite:'Adhésion directe',date:'2026-09-07',honore:'OUI',propos:['MSPH'],adhes:['MSPH']})]},
@@ -284,7 +284,7 @@ function stack(o,p,a){const t=o+p+a||1;return `<div class="stack"><span class="s
 function catLegend(s){return `<div class="legend">
   <span><span class="dot" style="background:var(--os)"></span>Santé <b>${s.os}</b></span>
   <span><span class="dot" style="background:var(--prev)"></span>Prévoyance <b>${s.prev}</b></span>
-  <span><span class="dot" style="background:var(--oa)"></span>Associées <b>${s.oa}</b></span></div>`;}
+  <span><span class="dot" style="background:var(--oa)"></span>Add. <b>${s.oa}</b></span></div>`;}
 
 function renderNav(){document.getElementById('navConseillers').innerHTML=state.conseillers.map((c,i)=>
   `<div class="nav-item ${route===i?'active':''}" data-route="${i}"><span class="av">${initials(c.name)}</span>${esc(c.name)}</div>`).join('');
@@ -380,12 +380,12 @@ function renderResult(){
     <div class="panel" style="margin-top:18px;"><div class="panel-h">Synthèse par conseiller</div><div class="scroll"><table>
       <thead>
         <tr><th rowspan="2">Conseiller</th><th colspan="4">RDV</th><th colspan="4">Propositions</th><th colspan="4">Adhésions (BA)</th><th rowspan="2">Transfo</th></tr>
-        <tr><th>Pris</th><th>Hon.</th><th>Non</th><th>%</th><th class="grp-os">Santé</th><th class="grp-prev">Prév</th><th class="grp-oa">Assoc</th><th>Tot</th><th class="grp-os">Santé</th><th class="grp-prev">Prév</th><th class="grp-oa">Assoc</th><th>Tot</th></tr>
+        <tr><th>Pris</th><th>Hon.</th><th>Non</th><th>%</th><th class="grp-os">Santé</th><th class="grp-prev">Prév</th><th class="grp-oa">Add.</th><th>Tot</th><th class="grp-os">Santé</th><th class="grp-prev">Prév</th><th class="grp-oa">Add.</th><th>Tot</th></tr>
       </thead>
       <tbody>${synth||'<tr><td colspan="14" class="empty">Aucune donnée.</td></tr>'}</tbody>
       <tfoot>${row('Total équipe',T,null)}</tfoot>
     </table></div></div>
-    <p style="color:var(--faint);font-size:.78rem;margin-top:14px;">Chaque ligne = une offre MGEN, chaque colonne = un conseiller. Sous-totaux par catégorie (Santé / Prévoyance / Associées). BA = bonnes affaires (adhésions signées).</p>`;
+    <p style="color:var(--faint);font-size:.78rem;margin-top:14px;">Chaque ligne = une offre MGEN, chaque colonne = un conseiller. Sous-totaux par catégorie (Santé / Prévoyance / Additionnelles). BA = bonnes affaires (adhésions signées).</p>`;
   document.querySelectorAll('[data-goto]').forEach(el=>el.onclick=()=>go(+el.dataset.goto));
   document.querySelectorAll('.seg [data-metric]').forEach(b=>b.onclick=()=>{resMetric=b.dataset.metric;render();});
   const hz=document.getElementById('hideZero');if(hz)hz.onchange=()=>{resHideZero=hz.checked;render();};
