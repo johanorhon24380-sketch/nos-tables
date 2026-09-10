@@ -164,7 +164,30 @@ let period='all';
 
 function load(){
   try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);}catch(e){}
-  return{conseillers:['Judicaël','Stéphane','Johan','Justine','Conseiller5'].map(n=>({name:n,contacts:[]}))};
+  return demoState();
+}
+function ex(o){return Object.assign(newContact(),o);}  // contact d'exemple
+function demoState(){
+  return{conseillers:[
+    {name:'Judicaël',contacts:[
+      ex({nom:'Bernard Alice',numero:'0104558821',origine:'Campagne',suite:'RDV Visio',date:'2026-09-06',honore:'OUI',propos:['Santé CO','Mutex DC'],adhes:['Santé CO','Mutex DC']}),
+      ex({nom:'Faure Thomas',numero:'0105123998',origine:'Receveur',suite:'RDV Face à face',date:'2026-09-09',honore:'OUI',propos:['MSP','PJ','Epargne vie'],adhes:['MSP']}),
+    ]},
+    {name:'Stéphane',contacts:[
+      ex({nom:'Durand Sophie',numero:'0103447712',origine:'Receveur',suite:'RDV Face à face',date:'2026-09-03',honore:'OUI',propos:['MSP','PJ'],adhes:['MSP']}),
+      ex({nom:'Petit Luc',numero:'0102889654',origine:'Passeur',suite:'RDV Face à face',date:'2026-09-04',honore:'OUI',propos:['Efficience','Prev CO'],adhes:['Efficience']}),
+      ex({nom:'Girard Emma',numero:'0106552310',origine:'Recommandation',suite:'RDV Téléphonique',date:'2026-09-08',honore:'NON'}),
+    ]},
+    {name:'Johan',contacts:[
+      ex({nom:'Descoubes Marielle',numero:'0101465524',origine:'Appel entrant autre',suite:'RDV Face à face',date:'2026-09-01',honore:'OUI',propos:['Santé CO'],adhes:['Santé CO']}),
+      ex({nom:'Vanwambeke Jolan',numero:'0106295583',origine:'Campagne',suite:'RDV Visio',date:'2026-09-02',honore:'OUI',propos:['Prev indiv','PJ','PER en points','Epargne vie'],adhes:['Prev INDIV conquête','PJ']}),
+      ex({nom:'Martin Paul',numero:'0102223344',origine:'Recommandation',suite:'RDV Téléphonique',date:'2026-09-05',honore:'NON'}),
+    ]},
+    {name:'Justine',contacts:[
+      ex({nom:'Robert Marc',numero:'0107784412',origine:'WEB service',suite:'Adhésion directe',date:'2026-09-07',honore:'OUI',propos:['MSPH'],adhes:['MSPH']}),
+    ]},
+    {name:'Conseiller5',contacts:[]},
+  ]};
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 function esc(s){return(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
