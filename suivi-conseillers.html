@@ -249,9 +249,18 @@ const OFFERS_ADHES={
 function catOf(o,set){for(const k of['os','prev','oa'])if(set[k].includes(o))return k;return 'oa';}
 
 let state=load(),route='dash',period='all',resMetric='adhes',resHideZero=false,consSearch='';
+let db=null,pendingRerender=false;const writeTimers={};
+normalizeIds();
 
+function normalizeIds(){state.conseillers.forEach((c,k)=>{if(!c.id)c.id='c'+(k+1)+'x'+Math.random().toString(36).slice(2,6);if(c.order==null)c.order=k;});}
 function load(){try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);}catch(e){}return demoState();}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function save(){saveLocal();}
+function conDoc(c){return{name:c.name,order:c.order||0,contacts:(c.contacts||[]).map(({_open,...r})=>r),updatedAt:Date.now()};}
+function persist(c,now){saveLocal();if(!db||!c)return;clearTimeout(writeTimers[c.id]);
+  const w=()=>{try{db.doc('conseillers/'+c.id).set(conDoc(c)).catch(()=>{});}catch(e){}};
+  if(now)w();else writeTimers[c.id]=setTimeout(w,500);}
+function conById(id){return state.conseillers.find(c=>c.id===id);}
 function esc(s){return(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function pct(a,b){return b>0?Math.round(a/b*100):0;}
 function stars(t){return t>=60?5:t>=45?4:t>=30?3:t>=15?2:1;}
@@ -307,22 +316,24 @@ function catLegend(s){return `<div class="legend">
   <span><span class="dot" style="background:var(--prev)"></span>Prévoyance <b>${s.prev}</b></span>
   <span><span class="dot" style="background:var(--oa)"></span>Add. <b>${s.oa}</b></span></div>`;}
 
-function renderNav(){document.getElementById('navConseillers').innerHTML=state.conseillers.map((c,i)=>
-  `<div class="nav-item ${route===i?'active':''}" data-route="${i}"><span class="av">${initials(c.name)}</span>${esc(c.name)}</div>`).join('');
+function renderNav(){document.getElementById('navConseillers').innerHTML=state.conseillers.map(c=>
+  `<div class="nav-item ${route===c.id?'active':''}" data-route="${c.id}"><span class="av">${initials(c.name)}</span>${esc(c.name)}</div>`).join('');
   document.querySelectorAll('.nav-item[data-route="dash"],.nav-item[data-route="result"]').forEach(el=>el.classList.toggle('active',el.dataset.route===route));}
 function periodSelect(){const ms=allMonths();return `<div class="period">📅 Période
   <select id="periodSel"><option value="all"${period==='all'?' selected':''}>Toute l'année</option>
   ${ms.map(m=>`<option value="${m}"${period===m?' selected':''}>${monthLabel(m)}</option>`).join('')}</select></div>`;}
 function go(r){route=r;consSearch='';renderNav();render();closeSidebar();}
-function render(){document.getElementById('topTitle').textContent=route==='dash'?'Tableau de bord':route==='result'?'Suivi de résultat':state.conseillers[route].name;
-  if(route==='dash')renderDash();else if(route==='result')renderResult();else renderConseiller(route);
+function render(){const cur=(route!=='dash'&&route!=='result')?conById(route):null;
+  if(route!=='dash'&&route!=='result'&&!cur){route='dash';}
+  document.getElementById('topTitle').textContent=route==='dash'?'Tableau de bord':route==='result'?'Suivi de résultat':(cur?cur.name:'');
+  if(route==='dash')renderDash();else if(route==='result')renderResult();else renderConseiller(cur);
   const ps=document.getElementById('periodSel');if(ps)ps.onchange=()=>{period=ps.value;render();};}
 
 /* ===== DASHBOARD ===== */
 function renderDash(){
   const T=teamStats();
   const rows=state.conseillers.map((c,i)=>{const s=stats(c);return `<tr>
-    <td><span class="rowname" data-goto="${i}"><span class="ra">${initials(c.name)}</span>${esc(c.name)}</span></td>
+    <td><span class="rowname" data-goto="${c.id}"><span class="ra">${initials(c.name)}</span>${esc(c.name)}</span></td>
     <td class="num-c">${s.rdv}</td><td class="num-c">${s.honore}</td><td class="num-c">${s.txHonore}%</td>
     <td class="num-c grp-prev">${s.propos.total}</td><td class="num-c grp-oa">${s.ba.total}</td><td class="num-c">${s.relance}</td>
     <td><div class="tbar"><span style="width:${s.taux}%"></span></div><span class="num-c">${s.taux}%</span></td>
@@ -344,7 +355,7 @@ function renderDash(){
     </table></div></div>
     <div class="panel" style="margin-top:18px;padding:16px 20px;font-size:.82rem;color:var(--muted);">
       <b style="color:var(--text);font-family:var(--disp);">Note ⭐ = taux de transformation</b> &nbsp;·&nbsp; ★★★★★ ≥60% · ★★★★ 45-59% · ★★★ 30-44% · ★★ 15-29% · ★ &lt;15%</div>`;
-  document.querySelectorAll('[data-goto]').forEach(el=>el.onclick=()=>go(+el.dataset.goto));
+  document.querySelectorAll('[data-goto]').forEach(el=>el.onclick=()=>go(el.dataset.goto));
 }
 
 /* ===== SUIVI DE RÉSULTAT (détaillé, offre par offre) ===== */
@@ -377,7 +388,7 @@ function renderResult(){
     <td class="num-c grp-os">${s.propos.os}</td><td class="num-c grp-prev">${s.propos.prev}</td><td class="num-c grp-oa">${s.propos.oa}</td><td class="num-c">${s.propos.total}</td>
     <td class="num-c grp-os">${s.ba.os}</td><td class="num-c grp-prev">${s.ba.prev}</td><td class="num-c grp-oa">${s.ba.oa}</td><td class="num-c">${s.ba.total}</td>
     <td class="num-c" style="color:var(--accent)">${s.taux}%</td></tr>`;
-  const synth=state.conseillers.map((c,i)=>row(c.name,stats(c),i)).join('');
+  const synth=state.conseillers.map(c=>row(c.name,stats(c),c.id)).join('');
   document.getElementById('content').innerHTML=`
     <div><div class="eyebrow">Analyse d'activité détaillée</div><div class="page-head"><h2>Suivi de résultat</h2></div></div>
     ${periodSelect()}
@@ -407,7 +418,7 @@ function renderResult(){
       <tfoot>${row('Total équipe',T,null)}</tfoot>
     </table></div></div>
     <p style="color:var(--faint);font-size:.78rem;margin-top:14px;">Chaque ligne = une offre MGEN, chaque colonne = un conseiller. Sous-totaux par catégorie (Santé / Prévoyance / Additionnelles). BA = bonnes affaires (adhésions signées).</p>`;
-  document.querySelectorAll('[data-goto]').forEach(el=>el.onclick=()=>go(+el.dataset.goto));
+  document.querySelectorAll('[data-goto]').forEach(el=>el.onclick=()=>go(el.dataset.goto));
   document.querySelectorAll('.seg [data-metric]').forEach(b=>b.onclick=()=>{resMetric=b.dataset.metric;render();});
   const hz=document.getElementById('hideZero');if(hz)hz.onchange=()=>{resHideZero=hz.checked;render();};
 }
@@ -453,8 +464,9 @@ function contactCard(x,ci,j){return `<div class="contact" data-card="${j}">
       <div class="field"><label>Date signature (2 temps)</label><input type="date" value="${esc(x.dateSignature)}" data-f="dateSignature" data-j="${j}"></div>
       <div class="field" style="grid-column:1/-1;"><label>Commentaires</label><input value="${esc(x.commentaire)}" data-f="commentaire" data-j="${j}"></div>
     </div>`:''}</div></div>`;}
-function renderConseiller(i){
-  const c=state.conseillers[i],s=stats(c);
+function renderConseiller(c){
+  if(!c)return renderDash();
+  const s=stats(c);
   const list=c.contacts.map((x,j)=>({x,j})).filter(o=>inPeriod(o.x)).reverse();
   document.getElementById('content').innerHTML=`
     <div class="page-head"><div class="big-av">${initials(c.name)}</div>
@@ -469,44 +481,44 @@ function renderConseiller(i){
     </div>
     <div class="toolbar"><button class="btn" id="addContact">+ Ajouter un contact</button></div>
     <div class="searchbar"><span class="si">🔍</span><input id="consSearch" placeholder="Rechercher un adhérent (nom ou n°)…" value="${esc(consSearch)}" autocomplete="off"></div>
-    <div id="contacts">${list.length?list.map(o=>contactCard(o.x,i,o.j)).join(''):'<div class="panel empty">Aucun contact sur cette période. Cliquez sur « + Ajouter un contact ».</div>'}</div>
+    <div id="contacts">${list.length?list.map(o=>contactCard(o.x,c.id,o.j)).join(''):'<div class="panel empty">Aucun contact sur cette période. Cliquez sur « + Ajouter un contact ».</div>'}</div>
     <div id="noneMsg" class="panel empty" hidden>Aucun adhérent ne correspond à votre recherche.</div>`;
-  document.getElementById('renameC').onclick=()=>{const n=prompt('Renommer :',c.name);if(n&&n.trim()){c.name=n.trim();save();renderNav();render();}};
-  document.getElementById('delC').onclick=()=>{if(confirm('Supprimer '+c.name+' et toutes ses saisies ?')){state.conseillers.splice(i,1);save();go('dash');}};
-  document.getElementById('addContact').onclick=()=>{consSearch='';c.contacts.push(newContact());save();renderConseiller(i);};
+  document.getElementById('renameC').onclick=()=>{const n=prompt('Renommer :',c.name);if(n&&n.trim()){c.name=n.trim();persist(c,true);renderNav();render();}};
+  document.getElementById('delC').onclick=()=>{if(confirm('Supprimer '+c.name+' et toutes ses saisies ?')){const id=c.id;state.conseillers=state.conseillers.filter(x=>x.id!==id);saveLocal();if(db){try{db.doc('conseillers/'+id).delete().catch(()=>{});}catch(e){}}go('dash');}};
+  document.getElementById('addContact').onclick=()=>{consSearch='';c.contacts.push(newContact());persist(c,true);renderConseiller(c);};
   const sb=document.getElementById('consSearch');
-  if(sb){sb.oninput=()=>{consSearch=sb.value;applyConsFilter(i);};}
-  bindContacts(i);
-  applyConsFilter(i);
+  if(sb){sb.oninput=()=>{consSearch=sb.value;applyConsFilter(c);};}
+  bindContacts(c);
+  applyConsFilter(c);
 }
-function applyConsFilter(i){
+function applyConsFilter(c){
   const q=consSearch.trim().toLowerCase();
   const cards=document.querySelectorAll('#contacts .contact');
   let shown=0;
-  cards.forEach(card=>{const x=state.conseillers[i].contacts[+card.dataset.card];
+  cards.forEach(card=>{const x=c.contacts[+card.dataset.card];if(!x)return;
     const hay=((x.nom||'')+' '+(x.numero||'')).toLowerCase();
     const match=!q||hay.includes(q);card.hidden=!match;if(match)shown++;});
   const none=document.getElementById('noneMsg');
   if(none)none.hidden=!(q&&shown===0&&cards.length>0);
 }
-function refreshTiles(i){const s=stats(state.conseillers[i]);const nums=document.querySelectorAll('.tiles .tile .num');
+function refreshTiles(c){const s=stats(c);const nums=document.querySelectorAll('.tiles .tile .num');
   const ringc=document.querySelector('.tile.accent svg');
   if(ringc)ringc.outerHTML=ring(s.taux);
   if(nums.length>=3){nums[0].textContent=s.rdv;nums[1].textContent=s.propos.total;nums[2].textContent=s.ba.total;}}
-function bindContacts(i){
-  const c=state.conseillers[i],box=document.getElementById('contacts');
-  box.addEventListener('input',e=>{const f=e.target.dataset.f;if(!f)return;const j=+e.target.dataset.j;c.contacts[j][f]=e.target.value;save();
+function bindContacts(c){
+  const box=document.getElementById('contacts');
+  box.addEventListener('input',e=>{const f=e.target.dataset.f;if(!f)return;const j=+e.target.dataset.j;c.contacts[j][f]=e.target.value;persist(c);
     if(f==='nom'){const av=e.target.closest('.contact').querySelector('.cavatar');if(av)av.textContent=e.target.value?initials(e.target.value):'—';}});
-  box.addEventListener('change',e=>{const f=e.target.dataset.f;if(!f)return;const j=+e.target.dataset.j;c.contacts[j][f]=e.target.value;save();
-    if(f==='date')refreshTiles(i);});
+  box.addEventListener('change',e=>{const f=e.target.dataset.f;if(!f)return;const j=+e.target.dataset.j;c.contacts[j][f]=e.target.value;persist(c);
+    if(f==='date')refreshTiles(c);});
   box.addEventListener('click',e=>{const t=e.target.closest('[data-hon],[data-del],[data-details],[data-toggle],[data-add],[data-rm]')||e.target;
-    if(t.dataset.hon){const j=+t.dataset.j;c.contacts[j].honore=t.dataset.hon;save();
-      t.parentElement.querySelectorAll('.tg').forEach(b=>{b.classList.remove('on','ok','no');if(b.dataset.hon===t.dataset.hon)b.classList.add('on',t.dataset.hon==='NON'?'no':'ok');});refreshTiles(i);return;}
-    if(t.dataset.del!=null){c.contacts.splice(+t.dataset.del,1);save();renderConseiller(i);return;}
-    if(t.dataset.details!=null){const j=+t.dataset.details;c.contacts[j]._open=!c.contacts[j]._open;save();renderConseiller(i);return;}
+    if(t.dataset.hon){const j=+t.dataset.j;c.contacts[j].honore=t.dataset.hon;persist(c);
+      t.parentElement.querySelectorAll('.tg').forEach(b=>{b.classList.remove('on','ok','no');if(b.dataset.hon===t.dataset.hon)b.classList.add('on',t.dataset.hon==='NON'?'no':'ok');});refreshTiles(c);return;}
+    if(t.dataset.del!=null){c.contacts.splice(+t.dataset.del,1);persist(c,true);renderConseiller(c);return;}
+    if(t.dataset.details!=null){const j=+t.dataset.details;c.contacts[j]._open=!c.contacts[j]._open;renderConseiller(c);return;}
     if(t.dataset.toggle){const p=box.querySelector(`[data-panel="${t.dataset.toggle}"]`);if(p)p.hidden=!p.hidden;return;}
-    if(t.dataset.add){const j=+t.dataset.j,arr=t.dataset.add==='propos'?c.contacts[j].propos:c.contacts[j].adhes;if(arr.length<5){arr.push(t.dataset.o);save();renderConseiller(i);}return;}
-    if(t.dataset.rm){const j=+t.dataset.j,arr=t.dataset.rm==='propos'?c.contacts[j].propos:c.contacts[j].adhes,k=arr.indexOf(t.dataset.o);if(k>-1){arr.splice(k,1);save();renderConseiller(i);}return;}});
+    if(t.dataset.add){const j=+t.dataset.j,arr=t.dataset.add==='propos'?c.contacts[j].propos:c.contacts[j].adhes;if(arr.length<5){arr.push(t.dataset.o);persist(c,true);renderConseiller(c);}return;}
+    if(t.dataset.rm){const j=+t.dataset.j,arr=t.dataset.rm==='propos'?c.contacts[j].propos:c.contacts[j].adhes,k=arr.indexOf(t.dataset.o);if(k>-1){arr.splice(k,1);persist(c,true);renderConseiller(c);}return;}});
 }
 
 function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('backdrop').classList.add('show');}
@@ -514,10 +526,37 @@ function closeSidebar(){document.getElementById('sidebar').classList.remove('ope
 document.getElementById('burger').onclick=openSidebar;
 document.getElementById('backdrop').onclick=closeSidebar;
 document.getElementById('sidebar').addEventListener('click',e=>{const it=e.target.closest('[data-route]');
-  if(it){const r=it.dataset.route;go(r==='dash'||r==='result'?r:+r);return;}
-  if(e.target.id==='navAdd'){const n=prompt('Nom du conseiller ?');if(n&&n.trim()){state.conseillers.push({name:n.trim(),contacts:[]});save();go(state.conseillers.length-1);}}});
+  if(it){go(it.dataset.route);return;}
+  if(e.target.id==='navAdd'){const n=prompt('Nom du conseiller ?');if(n&&n.trim()){
+    const c={id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:n.trim(),order:state.conseillers.length,contacts:[]};
+    state.conseillers.push(c);persist(c,true);go(c.id);}}});
 
-renderNav();render();
+/* ===== synchronisation base partagée ===== */
+function setSyncBadge(shared){const f=document.querySelector('.side-foot');if(!f)return;
+  f.innerHTML=shared?'🟢 <b style="color:var(--accent-ink)">Partagé</b> — données synchronisées pour toute l\'agence.'
+    :'💾 <b>Local</b> — données sur ce poste. Ouvrez le lien partagé pour la version agence.';}
+function onDbSnap(snap){
+  if(snap.empty)return; // base vide (pas encore initialisée) : on garde l'état local
+  const arr=[];
+  snap.docs.forEach(d=>{const v=d.data()||{};arr.push({id:d.id,name:v.name||d.id,order:(v.order!=null?v.order:0),contacts:Array.isArray(v.contacts)?v.contacts:[]});});
+  arr.sort((a,b)=>(a.order-b.order)||String(a.name).localeCompare(String(b.name)));
+  state.conseillers=arr;saveLocal();
+  const cont=document.getElementById('contacts');
+  const editing=cont&&document.activeElement&&cont.contains(document.activeElement);
+  if(editing){pendingRerender=true;renderNav();return;}
+  renderNav();render();
+}
+async function connectDb(){
+  if(!(window.claude&&claude.use)){setSyncBadge(false);return;}
+  try{db=await claude.use('db');}catch(e){db=null;}
+  if(!db){setSyncBadge(false);return;}
+  setSyncBadge(true);
+  try{db.collection('conseillers').onSnapshot(onDbSnap,()=>{});}catch(e){}
+}
+document.addEventListener('focusout',()=>{if(!pendingRerender)return;pendingRerender=false;
+  setTimeout(()=>{const cont=document.getElementById('contacts');if(!(cont&&document.activeElement&&cont.contains(document.activeElement))){renderNav();render();}},200);});
+
+renderNav();render();connectDb();
 </script>
 </body>
 </html>
