@@ -8,135 +8,163 @@
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
   :root{
-    --green:#00953b;--green-d:#007a30;--green-dd:#006128;--green-l:#e9f6ee;--green-xl:#f4fbf6;
-    --ink:#1c2b22;--muted:#6a7a70;--bg:#f4f8f5;--card:#fff;--border:#e2ece6;
-    --amber:#e0a81e;--ok:#00953b;--ko:#d25151;
-    --sh:0 2px 12px rgba(0,80,35,.06);--sh-h:0 8px 26px rgba(0,80,35,.12);
+    --green:#00953b;--green-d:#007a30;--green-dd:#00612a;--green-l:#e9f6ee;--green-xl:#f4fbf6;
+    --os:#00953b;--os-l:#e5f4ea;--prev:#2f6fb0;--prev-l:#e7eff8;--oa:#dd8a12;--oa-l:#fbf1dc;
+    --ink:#1b2a21;--muted:#6a7a70;--bg:#f3f7f4;--card:#fff;--border:#e2ece6;
+    --amber:#e0a81e;--ko:#d25151;
+    --sh:0 2px 12px rgba(0,70,30,.06);--sh-h:0 10px 30px rgba(0,70,30,.13);
   }
-  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);}
-
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
   .app{display:flex;min-height:100vh;}
 
-  /* ---------- SIDEBAR ---------- */
-  .sidebar{width:256px;background:linear-gradient(180deg,var(--green),var(--green-dd));color:#fff;
-    position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;padding:20px 14px;overflow-y:auto;z-index:40;transition:transform .25s;}
-  .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px;}
-  .brand .logo{width:38px;height:38px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--green);font-size:1.1rem;flex-shrink:0;}
-  .brand .txt b{display:block;font-size:1.02rem;font-weight:800;line-height:1.1;}
-  .brand .txt span{font-size:.72rem;opacity:.75;}
-  .nav-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.09em;opacity:.6;margin:14px 10px 6px;font-weight:600;}
+  /* SIDEBAR */
+  .sidebar{width:262px;background:linear-gradient(180deg,var(--green),var(--green-dd));color:#fff;position:fixed;inset:0 auto 0 0;display:flex;flex-direction:column;padding:20px 14px;overflow-y:auto;z-index:40;transition:transform .25s;}
+  .brand{display:flex;align-items:center;gap:11px;padding:4px 8px 16px;}
+  .brand .logo{width:40px;height:40px;background:#fff;border-radius:11px;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--green);font-size:1.15rem;flex-shrink:0;}
+  .brand b{display:block;font-size:1.04rem;font-weight:800;line-height:1.1;}
+  .brand span{font-size:.72rem;opacity:.75;}
+  .nav-lbl{font-size:.67rem;text-transform:uppercase;letter-spacing:.1em;opacity:.55;margin:16px 10px 6px;font-weight:700;}
   .nav-item{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:11px;cursor:pointer;font-size:.92rem;font-weight:500;color:rgba(255,255,255,.9);margin-bottom:2px;transition:background .15s;}
-  .nav-item:hover{background:rgba(255,255,255,.12);}
+  .nav-item:hover{background:rgba(255,255,255,.13);}
   .nav-item.active{background:#fff;color:var(--green-d);font-weight:700;box-shadow:var(--sh);}
   .nav-item .ic{width:22px;text-align:center;font-size:1rem;flex-shrink:0;}
-  .nav-item.tdb{font-size:1rem;font-weight:700;padding:13px 12px;}
-  .nav-item .av{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;}
+  .nav-item .av{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;}
   .nav-item.active .av{background:var(--green-l);color:var(--green-d);}
-  .nav-add{margin-top:4px;border:1px dashed rgba(255,255,255,.4);justify-content:center;font-size:.85rem;opacity:.9;}
+  .nav-add{margin-top:4px;border:1px dashed rgba(255,255,255,.4);justify-content:center;font-size:.85rem;}
   .side-foot{margin-top:auto;font-size:.7rem;opacity:.6;padding:14px 10px 4px;line-height:1.5;}
 
-  /* ---------- MAIN ---------- */
-  .main{flex:1;margin-left:256px;min-width:0;}
+  /* MAIN */
+  .main{flex:1;margin-left:262px;min-width:0;}
   .topbar{display:none;align-items:center;gap:12px;background:var(--green);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:30;}
   .burger{background:rgba(255,255,255,.18);border:none;color:#fff;font-size:1.2rem;width:38px;height:38px;border-radius:9px;cursor:pointer;}
-  .content{padding:26px 30px 70px;max-width:1000px;margin:0 auto;}
+  .content{padding:26px 30px 80px;max-width:1120px;margin:0 auto;}
 
-  .page-head{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
+  .page-head{display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
   .page-head h2{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;}
-  .page-head .big-av{width:46px;height:46px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;}
-  .page-head .sp{flex:1;}
+  .page-head .big-av{width:46px;height:46px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0;}
+  .sp{flex:1;}
   .mini{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:8px 13px;font-size:.83rem;font-weight:600;cursor:pointer;color:var(--muted);}
   .mini:hover{border-color:var(--green);color:var(--green-d);}
+  .period{display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:.85rem;color:var(--muted);}
+  .period select{border:1px solid var(--border);border-radius:9px;padding:8px 12px;font-family:inherit;font-size:.86rem;background:var(--card);color:var(--ink);font-weight:600;outline:none;}
+  .period select:focus{border-color:var(--green);}
 
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:14px;margin-bottom:24px;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px;}
   .c{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 18px;box-shadow:var(--sh);}
-  .c .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;}
+  .c .lbl{font-size:.71rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;}
   .c .val{font-size:1.9rem;font-weight:800;color:var(--green-d);margin-top:5px;line-height:1;}
   .c .sub{font-size:.72rem;color:var(--muted);margin-top:4px;}
+  .c.blue .val{color:var(--prev);} .c.amber .val{color:var(--oa);}
 
   .panel{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--sh);overflow:hidden;}
   .scroll{overflow-x:auto;}
-  table{width:100%;border-collapse:collapse;}
-  th,td{padding:12px 11px;text-align:center;border-bottom:1px solid #eef4f0;font-size:.88rem;}
-  th{background:var(--green-xl);color:var(--green-dd);font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;}
-  th:first-child,td:first-child{text-align:left;}
-  tbody tr:hover{background:var(--green-xl);}
+  table{width:100%;border-collapse:collapse;font-size:.87rem;}
+  th,td{padding:11px 10px;text-align:center;border-bottom:1px solid #eef4f0;white-space:nowrap;}
+  th{background:var(--green-xl);color:var(--green-dd);font-weight:700;font-size:.73rem;text-transform:uppercase;letter-spacing:.02em;}
+  th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--card);}
+  th:first-child{background:var(--green-xl);}
+  tbody tr:hover td{background:var(--green-xl);}
+  tbody tr:hover td:first-child{background:var(--green-xl);}
   tr:last-child td{border-bottom:none;}
-  tfoot td{background:var(--green-l);font-weight:800;color:var(--green-dd);border-bottom:none;}
+  tfoot td{background:var(--green-l)!important;font-weight:800;color:var(--green-dd);border-bottom:none;}
+  .grp-os{color:var(--os);} .grp-prev{color:var(--prev);} .grp-oa{color:var(--oa);}
   .stars{color:var(--amber);letter-spacing:1px;white-space:nowrap;}
   .stars .off{color:#dfe7e2;}
-  .rowname{cursor:pointer;color:var(--green-d);font-weight:600;}
+  .rowname{cursor:pointer;color:var(--green-d);font-weight:700;}
   .rowname:hover{text-decoration:underline;}
 
-  /* entry table inputs */
-  td input,td select{width:100%;border:1px solid transparent;border-radius:7px;padding:7px 6px;font-family:inherit;font-size:.86rem;background:transparent;outline:none;text-align:center;color:var(--ink);}
-  td input:focus,td select:focus{border-color:var(--green);background:#fff;}
-  td input.txt{text-align:left;}
-  td.num input{font-weight:700;}
-  .chk{width:18px;height:18px;accent-color:var(--green);}
-  .addrow td{background:var(--green-xl);padding:8px;}
-  .btn{background:var(--green);color:#fff;border:none;border-radius:9px;padding:10px 16px;font-size:.88rem;font-weight:600;cursor:pointer;font-family:inherit;}
+  /* CONTACT CARDS (saisie) */
+  .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .btn{background:var(--green);color:#fff;border:none;border-radius:10px;padding:11px 17px;font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;}
   .btn:hover{background:var(--green-d);}
-  .del{background:transparent;border:none;color:#c6d2cb;cursor:pointer;font-size:.95rem;}
-  .del:hover{color:var(--ko);}
+  .contact{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--sh);padding:16px;margin-bottom:14px;}
+  .contact.honore-non{border-left:4px solid var(--ko);}
+  .contact.honore-oui{border-left:4px solid var(--green);}
+  .frow{display:grid;grid-template-columns:1.4fr 1fr 1.2fr 1.1fr 1fr .8fr auto;gap:10px;align-items:end;}
+  .field{display:flex;flex-direction:column;gap:3px;min-width:0;}
+  .field label{font-size:.68rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700;}
+  .field input,.field select{border:1px solid var(--border);border-radius:9px;padding:9px 9px;font-family:inherit;font-size:.87rem;background:#fff;color:var(--ink);outline:none;width:100%;}
+  .field input:focus,.field select:focus{border-color:var(--green);}
+  .del{background:transparent;border:1px solid var(--border);border-radius:9px;color:#c4d0c8;cursor:pointer;font-size:.95rem;height:38px;width:38px;flex-shrink:0;}
+  .del:hover{color:var(--ko);border-color:#f0c9c9;}
 
-  .legend{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-top:22px;box-shadow:var(--sh);}
-  .legend h3{font-size:.98rem;margin-bottom:6px;}
-  .legend p{font-size:.82rem;color:var(--muted);margin-bottom:8px;}
-  .legend .lr{display:flex;gap:11px;align-items:center;font-size:.85rem;padding:3px 0;}
-  .legend .lr b{min-width:92px;}
+  .offers{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);}
+  .offers .oline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .offers .otag{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;min-width:96px;color:var(--muted);}
+  .chip{display:inline-flex;align-items:center;gap:6px;border-radius:50px;padding:5px 10px;font-size:.8rem;font-weight:600;cursor:default;border:1px solid transparent;}
+  .chip .x{cursor:pointer;opacity:.6;font-weight:700;}
+  .chip .x:hover{opacity:1;}
+  .chip.os{background:var(--os-l);color:var(--os);} .chip.prev{background:var(--prev-l);color:var(--prev);} .chip.oa{background:var(--oa-l);color:var(--oa);}
+  .addoffer{border:1px dashed var(--border);background:#fff;border-radius:50px;padding:5px 12px;font-size:.8rem;font-weight:600;color:var(--green-d);cursor:pointer;}
+  .addoffer:hover{border-color:var(--green);}
+  .offer-panel{margin-top:10px;background:var(--green-xl);border:1px solid var(--border);border-radius:12px;padding:12px;}
+  .offer-grp{margin-bottom:8px;}
+  .offer-grp:last-child{margin-bottom:0;}
+  .offer-grp .gh{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+  .offer-grp.os .gh{color:var(--os);} .offer-grp.prev .gh{color:var(--prev);} .offer-grp.oa .gh{color:var(--oa);}
+  .obtn{display:inline-block;background:#fff;border:1px solid var(--border);border-radius:50px;padding:5px 11px;font-size:.79rem;font-weight:600;margin:0 5px 5px 0;cursor:pointer;color:var(--ink);}
+  .obtn:hover{border-color:var(--green);background:var(--green-l);}
+  .details-toggle{margin-top:12px;font-size:.8rem;color:var(--green-d);cursor:pointer;font-weight:600;user-select:none;}
+  .details-box{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
   .empty{padding:34px;text-align:center;color:var(--muted);}
   .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:35;}
 
-  @media(max-width:820px){
+  @media(max-width:900px){
     .sidebar{transform:translateX(-100%);box-shadow:var(--sh-h);}
     .sidebar.open{transform:translateX(0);}
     .main{margin-left:0;}
     .topbar{display:flex;}
-    .content{padding:18px 16px 60px;}
+    .content{padding:16px 14px 60px;}
     .backdrop.show{display:block;}
+    .frow{grid-template-columns:1fr 1fr;}
   }
 </style>
 </head>
 <body>
 <div class="app">
-  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
-    <div class="brand">
-      <div class="logo">M</div>
-      <div class="txt"><b>Suivi Conseillers</b><span>MGEN — TDB Collectif</span></div>
-    </div>
-    <div class="nav-item tdb" data-route="dash"><span class="ic">📊</span> Tableau de bord</div>
+    <div class="brand"><div class="logo">M</div><div><b>Suivi Conseillers</b><span>MGEN — TDB Collectif 2026</span></div></div>
+    <div class="nav-item" data-route="dash"><span class="ic">📊</span> Tableau de bord</div>
+    <div class="nav-item" data-route="result"><span class="ic">📈</span> Suivi de résultat</div>
     <div class="nav-lbl">Conseillers</div>
     <div id="navConseillers"></div>
     <div class="nav-item nav-add" id="navAdd">+ Ajouter un conseiller</div>
     <div class="side-foot">Données enregistrées automatiquement sur ce poste.</div>
   </aside>
   <div class="backdrop" id="backdrop"></div>
-
-  <!-- MAIN -->
   <div class="main">
-    <div class="topbar">
-      <button class="burger" id="burger">☰</button>
-      <b id="topTitle">Tableau de bord</b>
-    </div>
+    <div class="topbar"><button class="burger" id="burger">☰</button><b id="topTitle">Tableau de bord</b></div>
     <div class="content" id="content"></div>
   </div>
 </div>
 
 <script>
 "use strict";
-const KEY='suiviConseillers_v3';
-const ORIGINES=['Receveur','Passeur','Appel entrant','Recommandation','Campagne','Spontané','Autre'];
+const KEY='suiviConseillers_v4';
+
+/* ---- référentiels (extraits du fichier Excel) ---- */
+const ORIGINES=['Actions extérieures','Actions locales','Affaires CRM','Appel PSC','Appel entrant autre','Atelier','Campagne','Campagne reversement','Passeur','Rebond Accueil','Receveur','Recommandation','Relance tel perso','WEB service'];
+const SUITES=['RDV Face à face','RDV Téléphonique','RDV Visio','Adhésion directe'];
+const CATS=[{k:'os',label:'Santé'},{k:'prev',label:'Prévoyance'},{k:'oa',label:'Offres associées'}];
+const OFFERS_PROPOS={
+  os:['MSP','OJI','Efficience','Efficience FPH','MSPH','Santé CO'],
+  prev:['Prev CO','Prev indiv','Mutex DC'],
+  oa:['PJ','Epargne vie','PER en points','PER multi','CAM','Neobsia','Ass emp','santé animal','Reversement EV','Reversement RET']
+};
+const OFFERS_ADHES={
+  os:['MSP','OJI','Efficience','Efficience FPH','MSPH','Santé CO'],
+  prev:['Prev CO maintien','Prev CO conquête','Prev INDIV maintien','Prev INDIV conquête','Mutex DC'],
+  oa:['PJ','Epargne vie','EV versement OK','PER pts','PER pts versement OK','PER multi','PER multi versement OK','CAM','Neobsia','Ass emp','Ass emp SUBSTIT','santé animal','Reversement EV','Reversement RET']
+};
+function catOf(offer,set){for(const k of ['os','prev','oa'])if(set[k].includes(offer))return k;return 'oa';}
+
 let state=load();
-let route='dash';   // 'dash' ou index conseiller
+let route='dash';
+let period='all';
 
 function load(){
   try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);}catch(e){}
-  return{conseillers:[
-    {name:'Judicaël',contacts:[]},{name:'Stéphane',contacts:[]},
-    {name:'Johan',contacts:[]},{name:'Justine',contacts:[]},{name:'Conseiller 5',contacts:[]}
-  ]};
+  return{conseillers:['Judicaël','Stéphane','Johan','Justine','Conseiller5'].map(n=>({name:n,contacts:[]}))};
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 function esc(s){return(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
@@ -144,144 +172,224 @@ function pct(a,b){return b>0?Math.round(a/b*100):0;}
 function stars(t){return t>=60?5:t>=45?4:t>=30?3:t>=15?2:1;}
 function starStr(n){let s='';for(let i=1;i<=5;i++)s+=i<=n?'★':'<span class="off">★</span>';return s;}
 function initials(n){return(n||'?').trim().split(/\s+/).map(w=>w[0]||'').slice(0,2).join('').toUpperCase()||'?';}
-function newContact(){return{adh:'',origine:'',date:'',rdv:true,propos:0,adh_nb:0,relance:false};}
+function newContact(){return{nom:'',numero:'',origine:'',suite:'',date:'',honore:'OUI',propos:[],adhes:[],reco:'',dateRdv2:'',dateRelance:'',dateSignature:'',commentaire:'',_open:false};}
+function ymd(d){return d?d.slice(0,7):'';}
+
+/* ---- collecte des mois présents ---- */
+function allMonths(){
+  const set=new Set();
+  state.conseillers.forEach(c=>c.contacts.forEach(x=>{if(x.date)set.add(ymd(x.date));}));
+  return[...set].sort().reverse();
+}
+function inPeriod(x){return period==='all'||ymd(x.date)===period;}
+function monthLabel(m){const[y,mo]=m.split('-');return['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'][+mo-1]+' '+y;}
+
+/* ---- stats ---- */
 function stats(c){
-  let s={contacts:c.contacts.length,rdv:0,propos:0,adh:0,relance:0};
-  c.contacts.forEach(x=>{if(x.rdv)s.rdv++;s.propos+=+x.propos||0;s.adh+=+x.adh_nb||0;if(x.relance)s.relance++;});
-  s.taux=pct(s.adh,s.propos);return s;
+  const s={rdv:0,honore:0,nonHonore:0,relance:0,
+    propos:{os:0,prev:0,oa:0,total:0},ba:{os:0,prev:0,oa:0,total:0}};
+  c.contacts.filter(inPeriod).forEach(x=>{
+    s.rdv++;
+    if(x.honore==='NON')s.nonHonore++;else s.honore++;
+    if(x.dateRelance)s.relance++;
+    x.propos.forEach(o=>{const k=catOf(o,OFFERS_PROPOS);s.propos[k]++;s.propos.total++;});
+    x.adhes.forEach(o=>{const k=catOf(o,OFFERS_ADHES);s.ba[k]++;s.ba.total++;});
+  });
+  s.taux=pct(s.ba.total,s.propos.total);
+  s.txHonore=pct(s.honore,s.rdv);
+  return s;
+}
+function teamStats(){
+  const T={rdv:0,honore:0,nonHonore:0,relance:0,propos:{os:0,prev:0,oa:0,total:0},ba:{os:0,prev:0,oa:0,total:0}};
+  state.conseillers.forEach(c=>{const s=stats(c);T.rdv+=s.rdv;T.honore+=s.honore;T.nonHonore+=s.nonHonore;T.relance+=s.relance;
+    ['os','prev','oa','total'].forEach(k=>{T.propos[k]+=s.propos[k];T.ba[k]+=s.ba[k];});});
+  T.taux=pct(T.ba.total,T.propos.total);T.txHonore=pct(T.honore,T.rdv);
+  return T;
 }
 
-/* ---------- SIDEBAR NAV ---------- */
+/* ---- navigation ---- */
 function renderNav(){
   document.getElementById('navConseillers').innerHTML=state.conseillers.map((c,i)=>
-    `<div class="nav-item ${route===i?'active':''}" data-route="${i}">
-       <span class="av">${initials(c.name)}</span>${esc(c.name)}</div>`).join('');
-  document.querySelector('.nav-item.tdb').classList.toggle('active',route==='dash');
+    `<div class="nav-item ${route===i?'active':''}" data-route="${i}"><span class="av">${initials(c.name)}</span>${esc(c.name)}</div>`).join('');
+  document.querySelectorAll('.nav-item[data-route="dash"],.nav-item[data-route="result"]').forEach(el=>el.classList.toggle('active',el.dataset.route===route));
 }
-
-/* ---------- ROUTING ---------- */
+function periodSelect(){
+  const ms=allMonths();
+  return `<div class="period">📅 Période :
+    <select id="periodSel"><option value="all"${period==='all'?' selected':''}>Toute l'année</option>
+    ${ms.map(m=>`<option value="${m}"${period===m?' selected':''}>${monthLabel(m)}</option>`).join('')}</select></div>`;
+}
 function go(r){route=r;renderNav();render();closeSidebar();}
 function render(){
-  document.getElementById('topTitle').textContent=route==='dash'?'Tableau de bord':state.conseillers[route].name;
-  if(route==='dash')renderDash();else renderConseiller(route);
+  document.getElementById('topTitle').textContent=route==='dash'?'Tableau de bord':route==='result'?'Suivi de résultat':state.conseillers[route].name;
+  if(route==='dash')renderDash();
+  else if(route==='result')renderResult();
+  else renderConseiller(route);
+  const ps=document.getElementById('periodSel');
+  if(ps)ps.addEventListener('change',()=>{period=ps.value;render();});
 }
 
-/* ---------- DASHBOARD ---------- */
+/* ---- TABLEAU DE BORD ---- */
 function renderDash(){
-  const T={contacts:0,rdv:0,propos:0,adh:0,relance:0};
-  state.conseillers.forEach(c=>{const s=stats(c);T.contacts+=s.contacts;T.rdv+=s.rdv;T.propos+=s.propos;T.adh+=s.adh;T.relance+=s.relance;});
-  const taux=pct(T.adh,T.propos);
-  let rows=state.conseillers.map((c,i)=>{const s=stats(c);
+  const T=teamStats();
+  const rows=state.conseillers.map((c,i)=>{const s=stats(c);
     return `<tr><td><span class="rowname" data-goto="${i}">${esc(c.name)}</span></td>
-      <td>${s.contacts}</td><td>${s.rdv}</td><td>${s.propos}</td><td>${s.adh}</td>
-      <td>${s.relance}</td><td>${s.taux}%</td><td class="stars">${starStr(stars(s.taux))}</td></tr>`;}).join('');
-
+      <td>${s.rdv}</td><td>${s.honore}</td><td>${s.txHonore}%</td>
+      <td>${s.propos.total}</td><td>${s.ba.total}</td><td>${s.relance}</td>
+      <td><b>${s.taux}%</b></td><td class="stars">${starStr(stars(s.taux))}</td></tr>`;}).join('');
   document.getElementById('content').innerHTML=`
     <div class="page-head"><h2>📊 Tableau de bord</h2></div>
+    ${periodSelect()}
     <div class="cards">
-      <div class="c"><div class="lbl">Conseillers</div><div class="val">${state.conseillers.length}</div></div>
-      <div class="c"><div class="lbl">RDV honorés</div><div class="val">${T.rdv}</div><div class="sub">sur ${T.contacts} contacts</div></div>
-      <div class="c"><div class="lbl">Propositions</div><div class="val">${T.propos}</div></div>
-      <div class="c"><div class="lbl">Adhésions</div><div class="val">${T.adh}</div></div>
+      <div class="c"><div class="lbl">RDV honorés</div><div class="val">${T.honore}</div><div class="sub">sur ${T.rdv} pris · ${T.txHonore}%</div></div>
+      <div class="c blue"><div class="lbl">Propositions</div><div class="val">${T.propos.total}</div></div>
+      <div class="c amber"><div class="lbl">Adhésions (BA)</div><div class="val">${T.ba.total}</div></div>
       <div class="c"><div class="lbl">Relances</div><div class="val">${T.relance}</div></div>
-      <div class="c"><div class="lbl">Taux transfo. équipe</div><div class="val">${taux}%</div><div class="sub">adhésions ÷ propositions</div></div>
+      <div class="c"><div class="lbl">Taux de transfo.</div><div class="val">${T.taux}%</div><div class="sub">adhésions ÷ propositions</div></div>
     </div>
     <div class="panel scroll"><table>
-      <thead><tr><th>Conseiller</th><th>Contacts</th><th>RDV honorés</th><th>Propositions</th>
-        <th>Adhésions</th><th>Relances</th><th>Taux transfo.</th><th>Note</th></tr></thead>
-      <tbody>${rows||'<tr><td colspan="8" class="empty">Aucun conseiller.</td></tr>'}</tbody>
-      <tfoot><tr><td>Total équipe</td><td>${T.contacts}</td><td>${T.rdv}</td><td>${T.propos}</td>
-        <td>${T.adh}</td><td>${T.relance}</td><td>${taux}%</td><td></td></tr></tfoot>
+      <thead><tr><th>Conseiller</th><th>RDV pris</th><th>Honorés</th><th>% hon.</th>
+        <th>Propos.</th><th>Adhés.</th><th>Relances</th><th>Transfo</th><th>Note</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="9" class="empty">Aucun conseiller.</td></tr>'}</tbody>
+      <tfoot><tr><td>Total équipe</td><td>${T.rdv}</td><td>${T.honore}</td><td>${T.txHonore}%</td>
+        <td>${T.propos.total}</td><td>${T.ba.total}</td><td>${T.relance}</td><td>${T.taux}%</td><td></td></tr></tfoot>
     </table></div>
-    <div class="legend">
-      <h3>⭐ Comment se calcule la note</h3>
-      <p>Étoiles basées sur le <b>taux de transformation</b> (adhésions ÷ propositions).</p>
-      <div class="lr"><span class="stars">★★★★★</span><b>Excellent</b>≥ 60 %</div>
-      <div class="lr"><span class="stars">★★★★<span class="off">★</span></span><b>Très bien</b>45 – 59 %</div>
-      <div class="lr"><span class="stars">★★★<span class="off">★★</span></span><b>Bien</b>30 – 44 %</div>
-      <div class="lr"><span class="stars">★★<span class="off">★★★</span></span><b>À améliorer</b>15 – 29 %</div>
-      <div class="lr"><span class="stars">★<span class="off">★★★★</span></span><b>Vigilance</b>&lt; 15 %</div>
+    <div class="panel" style="margin-top:20px;padding:16px 18px;">
+      <b style="font-size:.95rem;">⭐ Note = taux de transformation</b>
+      <div style="color:var(--muted);font-size:.83rem;margin-top:6px;">★★★★★ ≥60% · ★★★★ 45-59% · ★★★ 30-44% · ★★ 15-29% · ★ &lt;15%</div>
     </div>`;
   document.querySelectorAll('[data-goto]').forEach(el=>el.addEventListener('click',()=>go(+el.dataset.goto)));
 }
 
-/* ---------- CONSEILLER PAGE ---------- */
+/* ---- SUIVI DE RÉSULTAT ---- */
+function renderResult(){
+  const T=teamStats();
+  const row=(name,s,goto)=>`<tr>
+    <td>${goto!=null?`<span class="rowname" data-goto="${goto}">${esc(name)}</span>`:esc(name)}</td>
+    <td>${s.rdv}</td><td>${s.honore}</td><td>${s.nonHonore}</td><td>${s.txHonore}%</td>
+    <td class="grp-os">${s.propos.os}</td><td class="grp-prev">${s.propos.prev}</td><td class="grp-oa">${s.propos.oa}</td><td><b>${s.propos.total}</b></td>
+    <td class="grp-os">${s.ba.os}</td><td class="grp-prev">${s.ba.prev}</td><td class="grp-oa">${s.ba.oa}</td><td><b>${s.ba.total}</b></td>
+    <td><b>${s.taux}%</b></td></tr>`;
+  const rows=state.conseillers.map((c,i)=>row(c.name,stats(c),i)).join('');
+  document.getElementById('content').innerHTML=`
+    <div class="page-head"><h2>📈 Suivi de résultat</h2></div>
+    ${periodSelect()}
+    <div class="cards">
+      <div class="c"><div class="lbl">RDV pris</div><div class="val">${T.rdv}</div><div class="sub">${T.honore} honorés · ${T.nonHonore} non</div></div>
+      <div class="c blue"><div class="lbl">Propositions</div><div class="val">${T.propos.total}</div><div class="sub">S ${T.propos.os} · P ${T.propos.prev} · A ${T.propos.oa}</div></div>
+      <div class="c amber"><div class="lbl">Adhésions (BA)</div><div class="val">${T.ba.total}</div><div class="sub">S ${T.ba.os} · P ${T.ba.prev} · A ${T.ba.oa}</div></div>
+      <div class="c"><div class="lbl">Taux transfo.</div><div class="val">${T.taux}%</div></div>
+    </div>
+    <div class="panel scroll"><table>
+      <thead>
+        <tr><th rowspan="2">Conseiller</th><th colspan="4">RDV</th><th colspan="4">Propositions</th><th colspan="4">Adhésions (BA)</th><th rowspan="2">Transfo</th></tr>
+        <tr><th>Pris</th><th>Hon.</th><th>Non</th><th>%</th>
+            <th class="grp-os">Santé</th><th class="grp-prev">Prév</th><th class="grp-oa">Assoc</th><th>Tot</th>
+            <th class="grp-os">Santé</th><th class="grp-prev">Prév</th><th class="grp-oa">Assoc</th><th>Tot</th></tr>
+      </thead>
+      <tbody>${rows||'<tr><td colspan="14" class="empty">Aucune donnée.</td></tr>'}</tbody>
+      <tfoot>${row('Total équipe',T,null)}</tfoot>
+    </table></div>
+    <p style="color:var(--muted);font-size:.8rem;margin-top:14px;">Santé = offres santé · Prév = prévoyance · Assoc = offres associées (PJ, épargne, PER, CAM…). BA = bonnes affaires (adhésions signées).</p>`;
+  document.querySelectorAll('[data-goto]').forEach(el=>el.addEventListener('click',()=>go(+el.dataset.goto)));
+}
+
+/* ---- PAGE CONSEILLER (saisie) ---- */
+function chip(o,kind,ci,j){const set=kind==='propos'?OFFERS_PROPOS:OFFERS_ADHES;const k=catOf(o,set);
+  return `<span class="chip ${k}">${esc(o)}<span class="x" data-rm="${kind}" data-ci="${ci}" data-j="${j}" data-o="${esc(o)}">✕</span></span>`;}
+function offerPanel(kind,ci,j){const set=kind==='propos'?OFFERS_PROPOS:OFFERS_ADHES;
+  return `<div class="offer-panel" data-panel="${kind}-${j}" hidden>${CATS.map(c=>`
+    <div class="offer-grp ${c.k}"><div class="gh">${c.label}</div>
+      ${set[c.k].map(o=>`<span class="obtn" data-add="${kind}" data-ci="${ci}" data-j="${j}" data-o="${esc(o)}">+ ${esc(o)}</span>`).join('')}
+    </div>`).join('')}</div>`;}
+function offersBlock(x,kind,ci,j){const arr=kind==='propos'?x.propos:x.adhes;const tag=kind==='propos'?'Propositions':'Adhésions';
+  return `<div class="offers"><div class="oline"><span class="otag">${tag}</span>
+    ${arr.map(o=>chip(o,kind,ci,j)).join('')}
+    ${arr.length<5?`<span class="addoffer" data-toggle="${kind}-${j}">+ offre</span>`:'<span style="font-size:.72rem;color:var(--muted);">(5 max)</span>'}
+    </div>${offerPanel(kind,ci,j)}</div>`;}
+
+function contactCard(x,ci,j){
+  return `<div class="contact ${x.honore==='NON'?'honore-non':'honore-oui'}" data-card="${j}">
+    <div class="frow">
+      <div class="field"><label>Nom + prénom adhérent</label><input value="${esc(x.nom)}" data-f="nom" data-j="${j}" placeholder="Nom Prénom"></div>
+      <div class="field"><label>N° adhérent</label><input value="${esc(x.numero)}" data-f="numero" data-j="${j}" placeholder="N°"></div>
+      <div class="field"><label>Origine du contact</label><select data-f="origine" data-j="${j}"><option value="">—</option>${ORIGINES.map(o=>`<option ${o===x.origine?'selected':''}>${o}</option>`).join('')}</select></div>
+      <div class="field"><label>Suite donnée</label><select data-f="suite" data-j="${j}"><option value="">—</option>${SUITES.map(o=>`<option ${o===x.suite?'selected':''}>${o}</option>`).join('')}</select></div>
+      <div class="field"><label>Date</label><input type="date" value="${esc(x.date)}" data-f="date" data-j="${j}"></div>
+      <div class="field"><label>RDV honoré</label><select data-f="honore" data-j="${j}"><option ${x.honore==='OUI'?'selected':''}>OUI</option><option ${x.honore==='NON'?'selected':''}>NON</option></select></div>
+      <button class="del" data-del="${j}" title="Supprimer">✕</button>
+    </div>
+    ${offersBlock(x,'propos',ci,j)}
+    ${offersBlock(x,'adhes',ci,j)}
+    <div class="details-toggle" data-details="${j}">${x._open?'▾ Masquer les détails':'▸ RECO, relance, commentaire…'}</div>
+    ${x._open?`<div class="details-box">
+      <div class="field"><label>RECO</label><input value="${esc(x.reco)}" data-f="reco" data-j="${j}"></div>
+      <div class="field"><label>Date de RDV 2</label><input type="date" value="${esc(x.dateRdv2)}" data-f="dateRdv2" data-j="${j}"></div>
+      <div class="field"><label>Date de relance</label><input type="date" value="${esc(x.dateRelance)}" data-f="dateRelance" data-j="${j}"></div>
+      <div class="field"><label>Date signature (2 temps)</label><input type="date" value="${esc(x.dateSignature)}" data-f="dateSignature" data-j="${j}"></div>
+      <div class="field" style="grid-column:1/-1;"><label>Commentaires</label><input value="${esc(x.commentaire)}" data-f="commentaire" data-j="${j}"></div>
+    </div>`:''}
+  </div>`;
+}
 function renderConseiller(i){
   const c=state.conseillers[i],s=stats(c);
-  let rows=c.contacts.map((x,j)=>`
-    <tr data-j="${j}">
-      <td><input class="txt" value="${esc(x.adh)}" data-f="adh" placeholder="N°"></td>
-      <td><select data-f="origine"><option value="">—</option>
-        ${ORIGINES.map(o=>`<option ${o===x.origine?'selected':''}>${o}</option>`).join('')}
-        ${x.origine&&!ORIGINES.includes(x.origine)?`<option selected>${esc(x.origine)}</option>`:''}</select></td>
-      <td><input type="date" value="${esc(x.date)}" data-f="date"></td>
-      <td><select data-f="rdv"><option value="1"${x.rdv?' selected':''}>Oui</option><option value="0"${!x.rdv?' selected':''}>Non</option></select></td>
-      <td class="num"><input type="number" min="0" value="${+x.propos||0}" data-f="propos"></td>
-      <td class="num"><input type="number" min="0" value="${+x.adh_nb||0}" data-f="adh_nb"></td>
-      <td><input type="checkbox" class="chk" ${x.relance?'checked':''} data-f="relance"></td>
-      <td><button class="del" data-del="${j}">✕</button></td>
-    </tr>`).join('');
+  const list=c.contacts.map((x,j)=>({x,j})).filter(o=>inPeriod(o.x)).reverse();
   document.getElementById('content').innerHTML=`
-    <div class="page-head">
-      <div class="big-av">${initials(c.name)}</div><h2>${esc(c.name)}</h2>
+    <div class="page-head"><div class="big-av">${initials(c.name)}</div><h2>${esc(c.name)}</h2>
       <span class="sp"></span>
       <button class="mini" id="renameC">✎ Renommer</button>
       <button class="mini" id="delC">🗑 Supprimer</button>
     </div>
+    ${periodSelect()}
     <div class="cards">
-      <div class="c"><div class="lbl">Contacts</div><div class="val">${s.contacts}</div></div>
-      <div class="c"><div class="lbl">RDV honorés</div><div class="val">${s.rdv}</div></div>
-      <div class="c"><div class="lbl">Propositions</div><div class="val">${s.propos}</div></div>
-      <div class="c"><div class="lbl">Adhésions</div><div class="val">${s.adh}</div></div>
+      <div class="c"><div class="lbl">RDV pris</div><div class="val">${s.rdv}</div><div class="sub">${s.honore} honorés</div></div>
+      <div class="c blue"><div class="lbl">Propositions</div><div class="val">${s.propos.total}</div></div>
+      <div class="c amber"><div class="lbl">Adhésions</div><div class="val">${s.ba.total}</div></div>
       <div class="c"><div class="lbl">Taux transfo.</div><div class="val">${s.taux}%</div><div class="sub stars">${starStr(stars(s.taux))}</div></div>
     </div>
-    <div class="panel scroll"><table>
-      <thead><tr><th>N° adhérent</th><th>Origine du contact</th><th>Date</th><th>RDV honoré</th>
-        <th>Propositions</th><th>Adhésions</th><th>Relance</th><th></th></tr></thead>
-      <tbody id="entryRows">
-        ${rows||''}
-        <tr class="addrow"><td colspan="8"><button class="btn" id="addContact">+ Ajouter un contact</button></td></tr>
-      </tbody>
-    </table></div>`;
-  document.getElementById('renameC').addEventListener('click',()=>{const n=prompt('Renommer :',c.name);if(n&&n.trim()){c.name=n.trim();save();renderNav();render();}});
-  document.getElementById('delC').addEventListener('click',()=>{if(confirm('Supprimer '+c.name+' et toutes ses saisies ?')){state.conseillers.splice(i,1);save();go('dash');}});
-  bindEntry(i);
+    <div class="toolbar"><button class="btn" id="addContact">+ Ajouter un contact</button></div>
+    <div id="contacts">${list.length?list.map(o=>contactCard(o.x,i,o.j)).join(''):'<div class="panel empty">Aucun contact sur cette période. Cliquez sur « + Ajouter un contact ».</div>'}</div>`;
+  document.getElementById('renameC').onclick=()=>{const n=prompt('Renommer :',c.name);if(n&&n.trim()){c.name=n.trim();save();renderNav();render();}};
+  document.getElementById('delC').onclick=()=>{if(confirm('Supprimer '+c.name+' et toutes ses saisies ?')){state.conseillers.splice(i,1);save();go('dash');}};
+  document.getElementById('addContact').onclick=()=>{c.contacts.push(newContact());save();renderConseiller(i);};
+  bindContacts(i);
 }
-function bindEntry(i){
-  const c=state.conseillers[i],tb=document.getElementById('entryRows');
-  tb.addEventListener('click',e=>{
-    if(e.target.id==='addContact'){c.contacts.push(newContact());save();renderConseiller(i);return;}
-    const d=e.target.dataset.del;if(d!=null){c.contacts.splice(+d,1);save();renderConseiller(i);}
-  });
-  tb.addEventListener('change',e=>{
-    const tr=e.target.closest('tr[data-j]');if(!tr)return;
-    const x=c.contacts[+tr.dataset.j],f=e.target.dataset.f;
-    if(f==='relance')x[f]=e.target.checked;
-    else if(f==='rdv')x[f]=e.target.value==='1';
-    else if(f==='propos'||f==='adh_nb')x[f]=Math.max(0,+e.target.value||0);
-    else x[f]=e.target.value;
-    save();refreshCards(i);
-  });
-  tb.addEventListener('input',e=>{
-    if(e.target.dataset.f==='adh'){const tr=e.target.closest('tr[data-j]');c.contacts[+tr.dataset.j].adh=e.target.value;save();}
-  });
+function refreshConseillerCards(i){
+  const s=stats(state.conseillers[i]),v=document.querySelectorAll('.cards .c .val');
+  if(v.length>=4){v[0].textContent=s.rdv;v[1].textContent=s.propos.total;v[2].textContent=s.ba.total;v[3].textContent=s.taux+'%';
+    document.querySelector('.cards .c:last-child .sub').innerHTML=starStr(stars(s.taux));
+    document.querySelector('.cards .c:first-child .sub').textContent=s.honore+' honorés';}
 }
-function refreshCards(i){
-  const s=stats(state.conseillers[i]),vals=document.querySelectorAll('.cards .c .val');
-  if(vals.length>=5){vals[0].textContent=s.contacts;vals[1].textContent=s.rdv;vals[2].textContent=s.propos;vals[3].textContent=s.adh;vals[4].textContent=s.taux+'%';
-    document.querySelector('.cards .c:last-child .sub').innerHTML=starStr(stars(s.taux));}
+function bindContacts(i){
+  const c=state.conseillers[i],box=document.getElementById('contacts');
+  box.addEventListener('input',e=>{
+    const f=e.target.dataset.f;if(!f)return;const j=+e.target.dataset.j;c.contacts[j][f]=e.target.value;save();
+  });
+  box.addEventListener('change',e=>{
+    const f=e.target.dataset.f;if(!f)return;const j=+e.target.dataset.j;c.contacts[j][f]=e.target.value;save();
+    if(f==='honore'){const card=e.target.closest('.contact');card.classList.toggle('honore-non',e.target.value==='NON');card.classList.toggle('honore-oui',e.target.value==='OUI');refreshConseillerCards(i);}
+    if(f==='date')refreshConseillerCards(i);
+  });
+  box.addEventListener('click',e=>{
+    const t=e.target;
+    if(t.dataset.del!=null){c.contacts.splice(+t.dataset.del,1);save();renderConseiller(i);return;}
+    if(t.dataset.details!=null){const j=+t.dataset.details;c.contacts[j]._open=!c.contacts[j]._open;save();renderConseiller(i);return;}
+    if(t.dataset.toggle){const p=box.querySelector(`[data-panel="${t.dataset.toggle}"]`);if(p)p.hidden=!p.hidden;return;}
+    if(t.dataset.add){const j=+t.dataset.ci===i?+t.dataset.j:+t.dataset.j;const kind=t.dataset.add,arr=kind==='propos'?c.contacts[j].propos:c.contacts[j].adhes;
+      if(arr.length<5){arr.push(t.dataset.o);save();renderConseiller(i);refreshConseillerCards(i);}return;}
+    if(t.dataset.rm){const j=+t.dataset.j,kind=t.dataset.rm,arr=kind==='propos'?c.contacts[j].propos:c.contacts[j].adhes,k=arr.indexOf(t.dataset.o);
+      if(k>-1){arr.splice(k,1);save();renderConseiller(i);refreshConseillerCards(i);}return;}
+  });
 }
 
-/* ---------- sidebar toggle (mobile) ---------- */
+/* ---- sidebar mobile ---- */
 function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('backdrop').classList.add('show');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('backdrop').classList.remove('show');}
-document.getElementById('burger').addEventListener('click',openSidebar);
-document.getElementById('backdrop').addEventListener('click',closeSidebar);
-
-/* nav clicks */
+document.getElementById('burger').onclick=openSidebar;
+document.getElementById('backdrop').onclick=closeSidebar;
 document.getElementById('sidebar').addEventListener('click',e=>{
   const it=e.target.closest('[data-route]');
-  if(it){const r=it.dataset.route;go(r==='dash'?'dash':+r);return;}
+  if(it){const r=it.dataset.route;go(r==='dash'||r==='result'?r:+r);return;}
   if(e.target.id==='navAdd'){const n=prompt('Nom du conseiller ?');if(n&&n.trim()){state.conseillers.push({name:n.trim(),contacts:[]});save();go(state.conseillers.length-1);}}
 });
 
