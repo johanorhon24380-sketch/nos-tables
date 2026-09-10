@@ -199,6 +199,20 @@
   .empty{padding:40px;text-align:center;color:var(--muted);}
   .backdrop{display:none;position:fixed;inset:0;background:rgba(16,26,43,.4);z-index:35;}
 
+  /* ===== dialogues integres ===== */
+  .modal-bg{position:fixed;inset:0;background:rgba(16,26,43,.45);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
+  .modal-bg.show{display:flex;}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 64px rgba(16,30,55,.28);padding:22px;max-width:420px;width:100%;}
+  .modal h3{font-family:var(--disp);font-size:1.12rem;font-weight:700;margin-bottom:6px;}
+  .modal p{color:var(--muted);font-size:.88rem;margin-bottom:14px;line-height:1.5;}
+  .modal input{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 13px;font-size:.95rem;color:var(--text);background:var(--panel);outline:none;margin-bottom:16px;}
+  .modal input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+  .modal .btn-cancel{background:var(--fill);color:var(--text);border:1px solid var(--line);border-radius:11px;padding:10px 16px;font-weight:600;cursor:pointer;font-size:.88rem;}
+  .modal .btn-cancel:hover{border-color:var(--muted);}
+  .modal .btn-ok{background:linear-gradient(145deg,var(--accent),#067a3a);color:#fff;border:none;border-radius:11px;padding:10px 18px;font-weight:700;cursor:pointer;font-size:.88rem;}
+  .modal .btn-ok.danger{background:linear-gradient(145deg,#ef4444,#b91c1c);}
+
   @media(max-width:900px){
     .sidebar{transform:translateX(-100%);box-shadow:0 0 60px rgba(16,26,43,.25);}
     .sidebar.open{transform:translateX(0);}
@@ -224,6 +238,7 @@
     <div class="side-foot">Données enregistrées automatiquement sur ce poste.</div>
   </aside>
   <div class="backdrop" id="backdrop"></div>
+  <div class="modal-bg" id="modalBg"></div>
   <div class="main">
     <div class="topbar"><button class="burger" id="burger">☰</button><b id="topTitle">Tableau de bord</b></div>
     <div class="content" id="content"></div>
@@ -261,6 +276,31 @@ function persist(c,now){saveLocal();if(!db||!c)return;clearTimeout(writeTimers[c
   const w=()=>{try{db.doc('conseillers/'+c.id).set(conDoc(c)).catch(()=>{});}catch(e){}};
   if(now)w();else writeTimers[c.id]=setTimeout(w,500);}
 function conById(id){return state.conseillers.find(c=>c.id===id);}
+
+/* boîtes de dialogue intégrées (prompt/confirm ne marchent pas dans le bac à sable) */
+function modalText(title,message,value,okLabel){return new Promise(res=>{
+  const bg=document.getElementById('modalBg');
+  bg.innerHTML=`<div class="modal"><h3>${esc(title)}</h3>${message?`<p>${esc(message)}</p>`:''}
+    <input id="modalInput" value="${esc(value||'')}" autocomplete="off">
+    <div class="modal-actions"><button class="btn-cancel" id="mCancel">Annuler</button><button class="btn-ok" id="mOk">${esc(okLabel||'Valider')}</button></div></div>`;
+  bg.classList.add('show');
+  const inp=document.getElementById('modalInput');inp.focus();inp.select();
+  const done=v=>{bg.classList.remove('show');bg.innerHTML='';res(v);};
+  document.getElementById('mOk').onclick=()=>done(inp.value);
+  document.getElementById('mCancel').onclick=()=>done(null);
+  inp.onkeydown=e=>{if(e.key==='Enter')done(inp.value);else if(e.key==='Escape')done(null);};
+  bg.onclick=e=>{if(e.target===bg)done(null);};
+});}
+function modalConfirm(title,message,okLabel,danger){return new Promise(res=>{
+  const bg=document.getElementById('modalBg');
+  bg.innerHTML=`<div class="modal"><h3>${esc(title)}</h3>${message?`<p>${esc(message)}</p>`:''}
+    <div class="modal-actions"><button class="btn-cancel" id="mCancel">Annuler</button><button class="btn-ok ${danger?'danger':''}" id="mOk">${esc(okLabel||'Confirmer')}</button></div></div>`;
+  bg.classList.add('show');
+  const done=v=>{bg.classList.remove('show');bg.innerHTML='';res(v);};
+  document.getElementById('mOk').onclick=()=>done(true);
+  document.getElementById('mCancel').onclick=()=>done(false);
+  bg.onclick=e=>{if(e.target===bg)done(false);};
+});}
 function esc(s){return(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function pct(a,b){return b>0?Math.round(a/b*100):0;}
 function stars(t){return t>=60?5:t>=45?4:t>=30?3:t>=15?2:1;}
@@ -483,8 +523,8 @@ function renderConseiller(c){
     <div class="searchbar"><span class="si">🔍</span><input id="consSearch" placeholder="Rechercher un adhérent (nom ou n°)…" value="${esc(consSearch)}" autocomplete="off"></div>
     <div id="contacts">${list.length?list.map(o=>contactCard(o.x,c.id,o.j)).join(''):'<div class="panel empty">Aucun contact sur cette période. Cliquez sur « + Ajouter un contact ».</div>'}</div>
     <div id="noneMsg" class="panel empty" hidden>Aucun adhérent ne correspond à votre recherche.</div>`;
-  document.getElementById('renameC').onclick=()=>{const n=prompt('Renommer :',c.name);if(n&&n.trim()){c.name=n.trim();persist(c,true);renderNav();render();}};
-  document.getElementById('delC').onclick=()=>{if(confirm('Supprimer '+c.name+' et toutes ses saisies ?')){const id=c.id;state.conseillers=state.conseillers.filter(x=>x.id!==id);saveLocal();if(db){try{db.doc('conseillers/'+id).delete().catch(()=>{});}catch(e){}}go('dash');}};
+  document.getElementById('renameC').onclick=async()=>{const n=await modalText('Renommer le conseiller','Nouveau nom :',c.name,'Renommer');if(n&&n.trim()){c.name=n.trim();persist(c,true);renderNav();render();}};
+  document.getElementById('delC').onclick=async()=>{const ok=await modalConfirm('Supprimer '+c.name+' ?','Toutes ses saisies seront définitivement supprimées.','Supprimer',true);if(ok){const id=c.id;state.conseillers=state.conseillers.filter(x=>x.id!==id);saveLocal();if(db){try{db.doc('conseillers/'+id).delete().catch(()=>{});}catch(e){}}go('dash');}};
   document.getElementById('addContact').onclick=()=>{consSearch='';c.contacts.push(newContact());persist(c,true);renderConseiller(c);};
   const sb=document.getElementById('consSearch');
   if(sb){sb.oninput=()=>{consSearch=sb.value;applyConsFilter(c);};}
@@ -511,10 +551,10 @@ function bindContacts(c){
     if(f==='nom'){const av=e.target.closest('.contact').querySelector('.cavatar');if(av)av.textContent=e.target.value?initials(e.target.value):'—';}});
   box.addEventListener('change',e=>{const f=e.target.dataset.f;if(!f)return;const j=+e.target.dataset.j;c.contacts[j][f]=e.target.value;persist(c);
     if(f==='date')refreshTiles(c);});
-  box.addEventListener('click',e=>{const t=e.target.closest('[data-hon],[data-del],[data-details],[data-toggle],[data-add],[data-rm]')||e.target;
+  box.addEventListener('click',async e=>{const t=e.target.closest('[data-hon],[data-del],[data-details],[data-toggle],[data-add],[data-rm]')||e.target;
     if(t.dataset.hon){const j=+t.dataset.j;c.contacts[j].honore=t.dataset.hon;persist(c);
       t.parentElement.querySelectorAll('.tg').forEach(b=>{b.classList.remove('on','ok','no');if(b.dataset.hon===t.dataset.hon)b.classList.add('on',t.dataset.hon==='NON'?'no':'ok');});refreshTiles(c);return;}
-    if(t.dataset.del!=null){c.contacts.splice(+t.dataset.del,1);persist(c,true);renderConseiller(c);return;}
+    if(t.dataset.del!=null){const j=+t.dataset.del;const nom=(c.contacts[j]&&c.contacts[j].nom)||'ce contact';const ok=await modalConfirm('Supprimer '+nom+' ?','La fiche sera définitivement supprimée.','Supprimer',true);if(ok){c.contacts.splice(j,1);persist(c,true);renderConseiller(c);}return;}
     if(t.dataset.details!=null){const j=+t.dataset.details;c.contacts[j]._open=!c.contacts[j]._open;renderConseiller(c);return;}
     if(t.dataset.toggle){const p=box.querySelector(`[data-panel="${t.dataset.toggle}"]`);if(p)p.hidden=!p.hidden;return;}
     if(t.dataset.add){const j=+t.dataset.j,arr=t.dataset.add==='propos'?c.contacts[j].propos:c.contacts[j].adhes;if(arr.length<5){arr.push(t.dataset.o);persist(c,true);renderConseiller(c);}return;}
@@ -525,9 +565,9 @@ function openSidebar(){document.getElementById('sidebar').classList.add('open');
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('backdrop').classList.remove('show');}
 document.getElementById('burger').onclick=openSidebar;
 document.getElementById('backdrop').onclick=closeSidebar;
-document.getElementById('sidebar').addEventListener('click',e=>{const it=e.target.closest('[data-route]');
+document.getElementById('sidebar').addEventListener('click',async e=>{const it=e.target.closest('[data-route]');
   if(it){go(it.dataset.route);return;}
-  if(e.target.id==='navAdd'){const n=prompt('Nom du conseiller ?');if(n&&n.trim()){
+  if(e.target.id==='navAdd'){const n=await modalText('Ajouter un conseiller','Nom du conseiller :','','Ajouter');if(n&&n.trim()){
     const c={id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:n.trim(),order:state.conseillers.length,contacts:[]};
     state.conseillers.push(c);persist(c,true);go(c.id);}}});
 
