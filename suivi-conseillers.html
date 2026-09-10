@@ -6,151 +6,253 @@
 <title>Suivi des Conseillers</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:system-ui,Segoe UI,Roboto,sans-serif;background:#f4f1f7;color:#211b2b;padding:20px;}
-  .wrap{max-width:900px;margin:0 auto;}
-  h1{font-size:1.5rem;color:#5b2a86;margin-bottom:4px;}
-  .sub{color:#726a80;font-size:.9rem;margin-bottom:18px;}
+  :root{
+    --violet:#5b2a86;--violet-d:#46206a;--violet-l:#efe7f6;
+    --blue:#3f6fb5;--green:#4a8f3c;
+    --ink:#211b2b;--muted:#726a80;--bg:#f4f1f7;--card:#fff;--border:#e6e0ee;
+    --ok:#2f9e5e;--ko:#d25151;--amber:#e0a81e;
+  }
+  body{font-family:system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);}
+  header{background:linear-gradient(135deg,var(--violet),var(--violet-d));color:#fff;padding:18px 20px;}
+  .head-in{max-width:1080px;margin:0 auto;}
+  header h1{font-size:1.35rem;font-weight:800;}
+  header p{opacity:.8;font-size:.85rem;margin-top:2px;}
 
-  .bar{margin-bottom:14px;}
-  .btn{background:#5b2a86;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:.9rem;font-weight:600;cursor:pointer;}
-  .btn:hover{background:#46206a;}
+  .tabs{max-width:1080px;margin:0 auto;padding:14px 16px 0;display:flex;gap:8px;}
+  .tab{background:var(--card);border:1px solid var(--border);border-bottom:none;border-radius:10px 10px 0 0;padding:11px 18px;font-size:.92rem;font-weight:600;color:var(--muted);cursor:pointer;}
+  .tab.active{color:var(--violet);background:var(--card);box-shadow:0 -2px 8px rgba(60,30,90,.05);border-color:var(--violet);border-bottom:2px solid var(--card);position:relative;top:1px;}
 
-  table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(60,30,90,.07);}
-  th,td{padding:11px 10px;text-align:center;border-bottom:1px solid #ece7f2;font-size:.9rem;}
-  th{background:#5b2a86;color:#fff;font-weight:600;font-size:.82rem;}
+  main{max-width:1080px;margin:0 auto;padding:18px 16px 70px;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---- dashboard ---- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px;}
+  .c{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;}
+  .c .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;}
+  .c .val{font-size:1.8rem;font-weight:800;color:var(--violet);margin-top:3px;line-height:1;}
+  .c .sub{font-size:.72rem;color:var(--muted);margin-top:3px;}
+  .c.blue .val{color:var(--blue);} .c.green .val{color:var(--green);}
+
+  table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(60,30,90,.06);}
+  th,td{padding:10px 9px;text-align:center;border-bottom:1px solid #ece7f2;font-size:.88rem;}
+  th{background:var(--violet);color:#fff;font-weight:600;font-size:.78rem;}
   th:first-child,td:first-child{text-align:left;}
   tr:last-child td{border-bottom:none;}
-  td input{width:60px;border:1px solid #ddd4ea;border-radius:6px;padding:6px;text-align:center;font-size:.95rem;font-family:inherit;outline:none;}
-  td input.name{width:100%;text-align:left;font-weight:600;}
-  td input:focus{border-color:#5b2a86;}
-  .rate{font-weight:700;color:#0e8f88;}
-  .stars{color:#e0a81e;font-size:1rem;letter-spacing:1px;white-space:nowrap;}
+  tfoot td{background:var(--violet-l);font-weight:700;color:var(--violet);}
+  .stars{color:var(--amber);letter-spacing:1px;white-space:nowrap;}
   .stars .off{color:#dcd5e6;}
-  .del{background:transparent;border:none;color:#c9c1d6;cursor:pointer;font-size:1rem;}
-  .del:hover{color:#d25151;}
-  tfoot td{background:#efe7f6;font-weight:700;color:#5b2a86;}
+  .scroll{overflow-x:auto;}
 
-  .legend{background:#fff;border-radius:12px;padding:14px 16px;margin-top:18px;box-shadow:0 2px 10px rgba(60,30,90,.07);}
-  .legend h3{font-size:.95rem;margin-bottom:8px;}
-  .legend p{font-size:.82rem;color:#726a80;margin-bottom:10px;}
-  .legend .row{display:flex;gap:10px;align-items:center;font-size:.85rem;padding:3px 0;}
-  .legend .row b{min-width:88px;}
-  .note{color:#726a80;font-size:.78rem;margin-top:14px;text-align:center;}
+  /* ---- saisie ---- */
+  .cons-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+  .pill{background:var(--card);border:1.5px solid var(--border);border-radius:50px;padding:8px 15px;font-size:.88rem;font-weight:600;color:var(--muted);cursor:pointer;}
+  .pill.active{background:var(--violet);border-color:var(--violet);color:#fff;}
+  .pill-add{border-style:dashed;color:var(--violet);}
+  .cons-actions{margin-left:auto;display:flex;gap:8px;}
+  .mini{background:transparent;border:1px solid var(--border);border-radius:8px;padding:7px 11px;font-size:.82rem;cursor:pointer;color:var(--muted);}
+  .mini:hover{border-color:var(--violet);color:var(--violet);}
+
+  .entry{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 2px 10px rgba(60,30,90,.06);overflow:hidden;}
+  td input,td select{width:100%;border:1px solid transparent;border-radius:6px;padding:6px 5px;font-family:inherit;font-size:.86rem;background:transparent;outline:none;text-align:center;}
+  td input:focus,td select:focus{border-color:var(--violet);background:#fff;}
+  td input.txt{text-align:left;}
+  td.num input{font-weight:700;}
+  .badge-ok{color:var(--ok);font-weight:700;}
+  .badge-ko{color:var(--ko);font-weight:700;}
+  .addrow{background:var(--violet-l);}
+  .addrow td{padding:6px;}
+  .btn{background:var(--violet);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:.86rem;font-weight:600;cursor:pointer;}
+  .btn:hover{background:var(--violet-d);}
+  .del{background:transparent;border:none;color:#c9c1d6;cursor:pointer;font-size:.95rem;}
+  .del:hover{color:var(--ko);}
+  .empty{padding:26px;text-align:center;color:var(--muted);font-size:.9rem;}
+
+  .legend{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:20px;}
+  .legend h3{font-size:.95rem;margin-bottom:6px;}
+  .legend p{font-size:.82rem;color:var(--muted);margin-bottom:8px;}
+  .legend .lr{display:flex;gap:10px;align-items:center;font-size:.84rem;padding:2px 0;}
+  .legend .lr b{min-width:88px;}
+  .note{color:var(--muted);font-size:.76rem;text-align:center;margin-top:16px;}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Suivi des Conseillers</h1>
-  <p class="sub">Tableau de bord — RDV · Propositions · Adhésions · Relances</p>
+<header><div class="head-in"><h1>Suivi des Conseillers</h1><p>RDV · Propositions · Adhésions · Relances — TDB Collectif</p></div></header>
 
-  <div class="bar"><button class="btn" id="add">+ Ajouter un conseiller</button></div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Conseiller</th><th>RDV</th><th>Propositions</th><th>Adhésions</th><th>Relances</th>
-        <th>Taux transfo.</th><th>Note</th><th></th>
-      </tr>
-    </thead>
-    <tbody id="rows"></tbody>
-    <tfoot>
-      <tr>
-        <td>Total équipe</td>
-        <td id="t-rdv">0</td><td id="t-propos">0</td><td id="t-adh">0</td><td id="t-relance">0</td>
-        <td id="t-taux">0%</td><td></td><td></td>
-      </tr>
-    </tfoot>
-  </table>
-
-  <div class="legend">
-    <h3>⭐ Les étoiles</h3>
-    <p>Note basée sur le <b>taux de transformation</b> (adhésions ÷ propositions) : la capacité à conclure.</p>
-    <div class="row"><span class="stars">★★★★★</span><b>Excellent</b><span>≥ 60 %</span></div>
-    <div class="row"><span class="stars">★★★★<span class="off">★</span></span><b>Très bien</b><span>45 – 59 %</span></div>
-    <div class="row"><span class="stars">★★★<span class="off">★★</span></span><b>Bien</b><span>30 – 44 %</span></div>
-    <div class="row"><span class="stars">★★<span class="off">★★★</span></span><b>À améliorer</b><span>15 – 29 %</span></div>
-    <div class="row"><span class="stars">★<span class="off">★★★★</span></span><b>Vigilance</b><span>&lt; 15 %</span></div>
-  </div>
-
-  <p class="note">Les données sont enregistrées automatiquement dans ce navigateur.</p>
+<div class="tabs">
+  <div class="tab active" data-view="dash">📊 Tableau de bord</div>
+  <div class="tab" data-view="saisie">✏️ Saisie</div>
 </div>
+
+<main>
+  <!-- ===== DASHBOARD ===== -->
+  <section class="view active" id="view-dash">
+    <div class="cards" id="teamCards"></div>
+    <div class="scroll">
+      <table>
+        <thead><tr>
+          <th>Conseiller</th><th>Contacts</th><th>RDV honorés</th><th>Propositions</th>
+          <th>Adhésions</th><th>Relances</th><th>Taux transfo.</th><th>Note</th>
+        </tr></thead>
+        <tbody id="dashRows"></tbody>
+        <tfoot><tr id="dashTotal"></tr></tfoot>
+      </table>
+    </div>
+    <div class="legend">
+      <h3>⭐ Les étoiles</h3>
+      <p>Note basée sur le <b>taux de transformation</b> (adhésions ÷ propositions).</p>
+      <div class="lr"><span class="stars">★★★★★</span><b>Excellent</b>≥ 60 %</div>
+      <div class="lr"><span class="stars">★★★★<span class="off">★</span></span><b>Très bien</b>45 – 59 %</div>
+      <div class="lr"><span class="stars">★★★<span class="off">★★</span></span><b>Bien</b>30 – 44 %</div>
+      <div class="lr"><span class="stars">★★<span class="off">★★★</span></span><b>À améliorer</b>15 – 29 %</div>
+      <div class="lr"><span class="stars">★<span class="off">★★★★</span></span><b>Vigilance</b>&lt; 15 %</div>
+    </div>
+  </section>
+
+  <!-- ===== SAISIE ===== -->
+  <section class="view" id="view-saisie">
+    <div class="cons-bar" id="consBar"></div>
+    <div class="entry scroll">
+      <table>
+        <thead><tr>
+          <th>N° adhérent</th><th>Origine du contact</th><th>Date</th><th>RDV honoré</th>
+          <th>Propositions</th><th>Adhésions</th><th>Relance</th><th></th>
+        </tr></thead>
+        <tbody id="entryRows"></tbody>
+      </table>
+    </div>
+    <p class="note">Ajoutez une ligne par contact. Tout se calcule automatiquement dans le tableau de bord.</p>
+  </section>
+</main>
 
 <script>
 "use strict";
-const KEY='suiviConseillers_simple';
-let data=load();
+const KEY='suiviConseillers_v3';
+const ORIGINES=['Receveur','Passeur','Appel entrant','Recommandation','Campagne','Spontané','Autre'];
+let state=load();
+let active=0;      // index conseiller actif (saisie)
 
 function load(){
   try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);}catch(e){}
-  return[
-    {name:'Conseiller 1',rdv:0,propos:0,adh:0,relance:0},
-    {name:'Conseiller 2',rdv:0,propos:0,adh:0,relance:0}
-  ];
+  return{conseillers:[
+    {name:'Judicaël',contacts:[]},{name:'Stéphane',contacts:[]},
+    {name:'Johan',contacts:[]},{name:'Justine',contacts:[]},{name:'Conseiller 5',contacts:[]}
+  ]};
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function esc(s){return(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function pct(a,b){return b>0?Math.round(a/b*100):0;}
 function stars(t){return t>=60?5:t>=45?4:t>=30?3:t>=15?2:1;}
 function starStr(n){let s='';for(let i=1;i<=5;i++)s+=i<=n?'★':'<span class="off">★</span>';return s;}
-function esc(s){return(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function newContact(){return{adh:'',origine:'',date:'',rdv:true,propos:0,adh_nb:0,relance:false};}
 
-function render(){
-  const tb=document.getElementById('rows');tb.innerHTML='';
-  let T={rdv:0,propos:0,adh:0,relance:0};
-  data.forEach((c,i)=>{
-    T.rdv+=+c.rdv;T.propos+=+c.propos;T.adh+=+c.adh;T.relance+=+c.relance;
-    const t=pct(c.adh,c.propos);
+/* stats for one conseiller */
+function stats(c){
+  let s={contacts:c.contacts.length,rdv:0,propos:0,adh:0,relance:0};
+  c.contacts.forEach(x=>{if(x.rdv)s.rdv++;s.propos+=+x.propos||0;s.adh+=+x.adh_nb||0;if(x.relance)s.relance++;});
+  s.taux=pct(s.adh,s.propos);
+  return s;
+}
+
+/* ---------- DASHBOARD ---------- */
+function renderDash(){
+  const T={contacts:0,rdv:0,propos:0,adh:0,relance:0};
+  state.conseillers.forEach(c=>{const s=stats(c);T.contacts+=s.contacts;T.rdv+=s.rdv;T.propos+=s.propos;T.adh+=s.adh;T.relance+=s.relance;});
+  const taux=pct(T.adh,T.propos);
+  document.getElementById('teamCards').innerHTML=`
+    <div class="c"><div class="lbl">Conseillers</div><div class="val">${state.conseillers.length}</div></div>
+    <div class="c"><div class="lbl">RDV honorés</div><div class="val">${T.rdv}</div><div class="sub">sur ${T.contacts} contacts</div></div>
+    <div class="c blue"><div class="lbl">Propositions</div><div class="val">${T.propos}</div></div>
+    <div class="c green"><div class="lbl">Adhésions</div><div class="val">${T.adh}</div></div>
+    <div class="c"><div class="lbl">Relances</div><div class="val">${T.relance}</div></div>
+    <div class="c"><div class="lbl">Taux transfo. équipe</div><div class="val">${taux}%</div><div class="sub">adhésions ÷ propositions</div></div>`;
+
+  const tb=document.getElementById('dashRows');tb.innerHTML='';
+  state.conseillers.forEach(c=>{
+    const s=stats(c);
     const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td><input class="name" value="${esc(c.name)}" data-i="${i}" data-f="name"></td>
-      <td><input type="number" min="0" value="${c.rdv}" data-i="${i}" data-f="rdv"></td>
-      <td><input type="number" min="0" value="${c.propos}" data-i="${i}" data-f="propos"></td>
-      <td><input type="number" min="0" value="${c.adh}" data-i="${i}" data-f="adh"></td>
-      <td><input type="number" min="0" value="${c.relance}" data-i="${i}" data-f="relance"></td>
-      <td class="rate">${t}%</td>
-      <td class="stars">${starStr(stars(t))}</td>
-      <td><button class="del" data-del="${i}" title="Supprimer">✕</button></td>`;
+    tr.innerHTML=`<td>${esc(c.name)}</td><td>${s.contacts}</td><td>${s.rdv}</td><td>${s.propos}</td>
+      <td>${s.adh}</td><td>${s.relance}</td><td>${s.taux}%</td>
+      <td class="stars">${starStr(stars(s.taux))}</td>`;
     tb.appendChild(tr);
   });
-  document.getElementById('t-rdv').textContent=T.rdv;
-  document.getElementById('t-propos').textContent=T.propos;
-  document.getElementById('t-adh').textContent=T.adh;
-  document.getElementById('t-relance').textContent=T.relance;
-  document.getElementById('t-taux').textContent=pct(T.adh,T.propos)+'%';
-  save();
+  document.getElementById('dashTotal').innerHTML=
+    `<td>Total équipe</td><td>${T.contacts}</td><td>${T.rdv}</td><td>${T.propos}</td>
+     <td>${T.adh}</td><td>${T.relance}</td><td>${taux}%</td><td></td>`;
 }
 
-document.getElementById('rows').addEventListener('input',e=>{
-  const t=e.target,i=t.dataset.i,f=t.dataset.f;if(i==null)return;
-  data[i][f]=f==='name'?t.value:Math.max(0,+t.value||0);
-  if(f==='name'){save();return;}
-  // update the row's rate + stars + totals without losing focus
-  render_focus_safe(t);
-});
-function render_focus_safe(input){
-  const i=input.dataset.i,c=data[i],t=pct(c.adh,c.propos);
-  const tr=input.closest('tr');
-  tr.querySelector('.rate').textContent=t+'%';
-  tr.querySelector('.stars').innerHTML=starStr(stars(t));
-  let T={rdv:0,propos:0,adh:0,relance:0};
-  data.forEach(c=>{T.rdv+=+c.rdv;T.propos+=+c.propos;T.adh+=+c.adh;T.relance+=+c.relance;});
-  document.getElementById('t-rdv').textContent=T.rdv;
-  document.getElementById('t-propos').textContent=T.propos;
-  document.getElementById('t-adh').textContent=T.adh;
-  document.getElementById('t-relance').textContent=T.relance;
-  document.getElementById('t-taux').textContent=pct(T.adh,T.propos)+'%';
-  save();
+/* ---------- SAISIE ---------- */
+function renderConsBar(){
+  const bar=document.getElementById('consBar');
+  bar.innerHTML=state.conseillers.map((c,i)=>
+    `<div class="pill ${i===active?'active':''}" data-c="${i}">${esc(c.name)}</div>`).join('')
+    +`<div class="pill pill-add" id="addCons">+ conseiller</div>`
+    +`<div class="cons-actions"><button class="mini" id="renameCons">✎ Renommer</button><button class="mini" id="delCons">🗑 Supprimer</button></div>`;
 }
-document.getElementById('rows').addEventListener('click',e=>{
-  const d=e.target.dataset.del;if(d==null)return;
-  if(confirm('Supprimer '+(data[d].name||'ce conseiller')+' ?')){data.splice(d,1);render();}
+function renderEntry(){
+  const c=state.conseillers[active];
+  const tb=document.getElementById('entryRows');
+  if(!c){tb.innerHTML='<tr><td colspan="8" class="empty">Aucun conseiller.</td></tr>';return;}
+  let html='';
+  c.contacts.forEach((x,i)=>{
+    html+=`<tr data-i="${i}">
+      <td><input class="txt" value="${esc(x.adh)}" data-f="adh"></td>
+      <td><select data-f="origine">${ORIGINES.map(o=>`<option ${o===x.origine?'selected':''}>${o}</option>`).join('')}${x.origine&&!ORIGINES.includes(x.origine)?`<option selected>${esc(x.origine)}</option>`:''}<option value=""${!x.origine?' selected':''}>—</option></select></td>
+      <td><input type="date" value="${esc(x.date)}" data-f="date"></td>
+      <td><select data-f="rdv"><option value="1"${x.rdv?' selected':''}>Oui</option><option value="0"${!x.rdv?' selected':''}>Non</option></select></td>
+      <td class="num"><input type="number" min="0" value="${+x.propos||0}" data-f="propos"></td>
+      <td class="num"><input type="number" min="0" value="${+x.adh_nb||0}" data-f="adh_nb"></td>
+      <td><input type="checkbox" ${x.relance?'checked':''} data-f="relance"></td>
+      <td><button class="del" data-del="${i}">✕</button></td>
+    </tr>`;
+  });
+  html+=`<tr class="addrow"><td colspan="8"><button class="btn" id="addContact">+ Ajouter un contact</button></td></tr>`;
+  tb.innerHTML=html;
+}
+function renderSaisie(){renderConsBar();renderEntry();}
+
+/* ---------- events ---------- */
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById('view-'+t.dataset.view).classList.add('active');
+  if(t.dataset.view==='dash')renderDash();else renderSaisie();
+}));
+
+document.getElementById('consBar').addEventListener('click',e=>{
+  const p=e.target.closest('[data-c]');
+  if(p){active=+p.dataset.c;renderSaisie();return;}
+  if(e.target.id==='addCons'){
+    const n=prompt('Nom du conseiller ?');if(n&&n.trim()){state.conseillers.push({name:n.trim(),contacts:[]});active=state.conseillers.length-1;save();renderSaisie();}
+  }
+  if(e.target.id==='renameCons'){
+    const c=state.conseillers[active];if(!c)return;const n=prompt('Renommer :',c.name);if(n&&n.trim()){c.name=n.trim();save();renderSaisie();}
+  }
+  if(e.target.id==='delCons'){
+    const c=state.conseillers[active];if(!c)return;
+    if(confirm('Supprimer '+c.name+' et toutes ses saisies ?')){state.conseillers.splice(active,1);active=Math.max(0,active-1);save();renderSaisie();}
+  }
 });
-document.getElementById('add').addEventListener('click',()=>{
-  data.push({name:'Nouveau conseiller',rdv:0,propos:0,adh:0,relance:0});render();
-  const inputs=document.querySelectorAll('.name');const last=inputs[inputs.length-1];
-  if(last){last.focus();last.select();}
+document.getElementById('entryRows').addEventListener('click',e=>{
+  if(e.target.id==='addContact'){state.conseillers[active].contacts.push(newContact());save();renderEntry();return;}
+  const d=e.target.dataset.del;
+  if(d!=null){state.conseillers[active].contacts.splice(+d,1);save();renderEntry();}
+});
+document.getElementById('entryRows').addEventListener('change',e=>{
+  const tr=e.target.closest('tr[data-i]');if(!tr)return;
+  const i=+tr.dataset.i,f=e.target.dataset.f,x=state.conseillers[active].contacts[i];
+  if(f==='relance')x[f]=e.target.checked;
+  else if(f==='rdv')x[f]=e.target.value==='1';
+  else if(f==='propos'||f==='adh_nb')x[f]=Math.max(0,+e.target.value||0);
+  else x[f]=e.target.value;
+  save();
+});
+document.getElementById('entryRows').addEventListener('input',e=>{
+  if(e.target.dataset.f==='adh'){const tr=e.target.closest('tr[data-i]');state.conseillers[active].contacts[+tr.dataset.i].adh=e.target.value;save();}
 });
 
-render();
+renderDash();
 </script>
 </body>
 </html>
